@@ -4,8 +4,9 @@ import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import postgres from 'postgres';
-import { signIn } from '@/auth';
+import { signIn} from '@/auth';
 import { AuthError } from 'next-auth';
+import { stringify } from 'querystring';
 
 export type State = {
   errors?: {
@@ -121,6 +122,27 @@ export async function authenticate(
   try {
     await signIn('credentials', formData);
   } catch (error) {
+    if (error instanceof AuthError) {
+      switch (error.type) {
+        case 'CredentialsSignin':
+          return 'Invalid credentials.';
+        default:
+          return 'Something went wrong.';
+      }
+    }
+    throw error;
+  }
+}
+
+export async function createUser(
+  prevState: string | undefined,
+  formData: FormData,
+) {
+  try {
+    console.log(`Vai criar o usuário - formData: ${formData}`)
+    await createUser('credentials', formData);
+  } catch (error) {
+    console.log(error)
     if (error instanceof AuthError) {
       switch (error.type) {
         case 'CredentialsSignin':
