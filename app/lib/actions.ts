@@ -7,6 +7,7 @@ import postgres from 'postgres';
 import { signIn} from '@/auth';
 import { AuthError } from 'next-auth';
 import { stringify } from 'querystring';
+import axios from 'axios';
 
 export type State = {
   errors?: {
@@ -134,23 +135,36 @@ export async function authenticate(
   }
 }
 
-export async function createUser(
-  prevState: string | undefined,
-  formData: FormData,
-) {
+export async function registerUser(
+  state: { message: any } | undefined,
+  formData: FormData
+): Promise<{ message: any }> {
+  const data = {
+    phone: formData.get('phone'),
+    name: formData.get('name'),
+    email: formData.get('email'),
+    password: formData.get('password'),
+    role: 'PROVIDER',
+  };
+
   try {
-    console.log(`Vai criar o usuário - formData: ${formData}`)
-    await createUser('credentials', formData);
-  } catch (error) {
-    console.log(error)
-    if (error instanceof AuthError) {
-      switch (error.type) {
-        case 'CredentialsSignin':
-          return 'Invalid credentials.';
-        default:
-          return 'Something went wrong.';
-      }
+    console.log('Data to be sent:', data); // Log the data being sent
+    const response = await axios.post(`${process.env.HEGEMON_URL}/auth/register`, data);
+
+    if (response.status === 200) {
+      const token = response.data.token; // Supondo que o token seja retornado no campo `token`
+      localStorage.setItem('authToken', token); // Armazena o token no localStorage
+      redirect('/dashboard'); // Redireciona para o dashboard
+    } else {
+      return {
+        message: response.data.message || 'Erro ao registrar usuário.',
+      };
     }
-    throw error;
+  } catch (error: any) {
+    console.log(`error.response?.data?`, error.response?.data); // Log the error response
+    console.log(`error.response?.status?`, error.response?.status); // Log the error status
+    return {
+      message: error.response?.data?.message || 'Erro ao conectar com o servidor.',
+    };
   }
 }
