@@ -5,41 +5,54 @@ import { z } from 'zod';
 import type { User } from '@/app/lib/definitions';
 import bcrypt from 'bcryptjs';
 import postgres from 'postgres';
+import axios from 'axios';
+
+const axiosInstance = axios.create({
+  baseURL: `${process.env.HEGEMON_URL}`,
+  headers: {
+    'Content-Type': 'application/json'
+  }
+})
  
-const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
- 
-async function getUser(email: string): Promise<User | undefined> {
+async function getUser(userId: string, token: string): Promise<User | undefined> {
   try {
-    const user = await sql<User[]>`SELECT * FROM users WHERE email=${email}`;
-    return user[0];
+    console.log('Fetching user data...', userId, token)
+
+      const response = await axiosInstance.post(
+      '/auth/user-data',
+      { userId }, // Corpo da requisição
+      {
+        headers: {
+          Authorization: `Bearer ${token}`, // Adiciona o token no cabeçalho
+        },
+      }
+    );
+
+    console.log('/auth/user-data: ', response.data)
+
+    return response.data; // Assuming the API returns the user data in the response body
   } catch (error) {
     console.error('Failed to fetch user:', error);
     throw new Error('Failed to fetch user.');
   }
 }
 
-export async function createUser(email: string): Promise<User | undefined> {
-  try {
-    const user = await sql<User[]>`SELECT * FROM users WHERE email=${email}`;
-    return user[0];
-  } catch (error) {
-    console.error('Failed to fetch user:', error);
-    throw new Error('Failed to fetch user.');
-  }
-}
- 
 export const { auth, signIn, signOut } = NextAuth({
   ...authConfig,
   providers: [
     Credentials({
       async authorize(credentials) {
+
         const parsedCredentials = z
-          .object({ email: z.string().email(), password: z.string().min(6) })
+          .object({ email: z.string().email(), password: z.string().min(6), userId: z.string(), token: z.string() })
           .safeParse(credentials);
- 
+
         if (parsedCredentials.success) {
-          const { email, password } = parsedCredentials.data;
-          const user = await getUser(email);
+ 
+          const { email, password, userId, token } = parsedCredentials.data;
+
+          const user = await getUser(userId, token);
+
           if (!user) return null;
           const passwordsMatch = await bcrypt.compare(password, user.password);
           if (passwordsMatch) return user;

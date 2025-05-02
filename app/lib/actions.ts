@@ -9,6 +9,13 @@ import { AuthError } from 'next-auth';
 import { stringify } from 'querystring';
 import axios from 'axios';
 
+const axiosInstance = axios.create({
+  baseURL: `${process.env.HEGEMON_URL}`,
+  headers: {
+    'Content-Type': 'application/json'
+    }
+})
+
 export type State = {
   errors?: {
     customerId?: string[];
@@ -72,44 +79,44 @@ export async function updateInvoice(
   redirect('/dashboard/invoices');
 }
 
-  export async function createInvoice(prevState: State, formData: FormData) {
-    // Validate form using Zod
-    const validatedFields = CreateInvoice.safeParse({
-      customerId: formData.get('customerId'),
-      amount: formData.get('amount'),
-      status: formData.get('status'),
-    });
-   
-    // If form validation fails, return errors early. Otherwise, continue.
-    if (!validatedFields.success) {
-      return {
-        errors: validatedFields.error.flatten().fieldErrors,
-        message: 'Missing Fields. Failed to Create Invoice.',
-      };
-    }
-   
-    // Prepare data for insertion into the database
-    const { customerId, amount, status } = validatedFields.data;
-    const amountInCents = amount * 100;
-    const date = new Date().toISOString().split('T')[0];
-   
-    // Insert data into the database
-    try {
-      await sql`
-        INSERT INTO invoices (customer_id, amount, status, date)
-        VALUES (${customerId}, ${amountInCents}, ${status}, ${date})
-      `;
-    } catch (error) {
-      // If a database error occurs, return a more specific error.
-      return {
-        message: 'Database Error: Failed to Create Invoice.',
-      };
-    }
-   
-    // Revalidate the cache for the invoices page and redirect the user.
-    revalidatePath('/dashboard/invoices');
-    redirect('/dashboard/invoices');
+export async function createInvoice(prevState: State, formData: FormData) {
+  // Validate form using Zod
+  const validatedFields = CreateInvoice.safeParse({
+    customerId: formData.get('customerId'),
+    amount: formData.get('amount'),
+    status: formData.get('status'),
+  });
+  
+  // If form validation fails, return errors early. Otherwise, continue.
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: 'Missing Fields. Failed to Create Invoice.',
+    };
   }
+  
+  // Prepare data for insertion into the database
+  const { customerId, amount, status } = validatedFields.data;
+  const amountInCents = amount * 100;
+  const date = new Date().toISOString().split('T')[0];
+  
+  // Insert data into the database
+  try {
+    await sql`
+      INSERT INTO invoices (customer_id, amount, status, date)
+      VALUES (${customerId}, ${amountInCents}, ${status}, ${date})
+    `;
+  } catch (error) {
+    // If a database error occurs, return a more specific error.
+    return {
+      message: 'Database Error: Failed to Create Invoice.',
+    };
+  }
+  
+  // Revalidate the cache for the invoices page and redirect the user.
+  revalidatePath('/dashboard/invoices');
+  redirect('/dashboard/invoices');
+}
 
 export async function deleteInvoice(id: string) {
   await sql`DELETE FROM invoices WHERE id = ${id}`;
@@ -139,30 +146,43 @@ export async function registerUser(
   state: { message: any } | undefined,
   formData: FormData
 ): Promise<{ message: any }> {
+
   const data = {
-    phone: formData.get('phone'),
     name: formData.get('name'),
+    phone: formData.get('phone'),
     email: formData.get('email'),
     password: formData.get('password'),
     role: 'PROVIDER',
   };
 
   try {
-    console.log('Data to be sent:', data); // Log the data being sent
-    const response = await axios.post(`${process.env.HEGEMON_URL}/auth/register`, data);
-
+    const response = await axiosInstance.post('/auth/register', data); // Use the axios instance to make the request
+    
     if (response.status === 200) {
-      const token = response.data.token; // Supondo que o token seja retornado no campo `token`
-      localStorage.setItem('authToken', token); // Armazena o token no localStorage
-      redirect('/dashboard'); // Redireciona para o dashboard
+      const { token, user } = response.data; // Extrai o token e o usuário do response
+
+      // Cria um objeto FormData para passar as credenciais para o método authenticate
+      const authFormData = new FormData();
+      authFormData.append('email', user.email);
+      authFormData.append('password', formData.get('password') as string);
+      authFormData.append('userId', user._id as string);
+      authFormData.append('token', token as string);
+
+      // Salva o token no localStorage
+      // localStorage.setItem('authToken', token);
+      // Chama o método authenticate para autenticar o usuário
+      await authenticate(state?.message, authFormData);
+
+      // Redireciona para o dashboard
+      redirect('/dashboard');
     } else {
       return {
         message: response.data.message || 'Erro ao registrar usuário.',
       };
     }
   } catch (error: any) {
-    console.log(`error.response?.data?`, error.response?.data); // Log the error response
-    console.log(`error.response?.status?`, error.response?.status); // Log the error status
+    console.log('Response:', error); // Log the response data 
+
     return {
       message: error.response?.data?.message || 'Erro ao conectar com o servidor.',
     };
