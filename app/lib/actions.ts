@@ -128,12 +128,17 @@ export async function authenticate(
   formData: FormData,
 ) {
   try {
-    await signIn('credentials', formData);
+    console.log('FormData:', formData); // Log the FormData object to see its contents
+    // dar get no user? 
+
+
+    const UsersignIn = await signIn('credentials', formData);
+    console.log('UsersignIn:', UsersignIn); // Log the response from signIn
   } catch (error) {
     if (error instanceof AuthError) {
       switch (error.type) {
         case 'CredentialsSignin':
-          return 'Invalid credentials.';
+          return 'Credenciais inválidas.';
         default:
           return 'Something went wrong.';
       }
@@ -168,11 +173,7 @@ export async function registerUser(
       authFormData.append('userId', user._id as string);
       authFormData.append('token', token as string);
 
-      // Salva o token no localStorage
-      // localStorage.setItem('authToken', token);
-      // Chama o método authenticate para autenticar o usuário
-      await authenticate(state?.message, authFormData);
-
+      localStorage.setItem('authToken', token); // Armazena o token no localStorage
       // Redireciona para o dashboard
       redirect('/dashboard');
     } else {
