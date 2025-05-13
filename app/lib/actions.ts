@@ -131,7 +131,6 @@ export async function authenticate(
     console.log('FormData:', formData); // Log the FormData object to see its contents
     // dar get no user? 
 
-
     const UsersignIn = await signIn('credentials', formData);
     console.log('UsersignIn:', UsersignIn); // Log the response from signIn
   } catch (error) {
