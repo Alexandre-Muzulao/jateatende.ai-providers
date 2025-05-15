@@ -14,34 +14,104 @@ import { useActionState } from 'react';
 import { useState } from 'react';
 import { InformationCircleIcon } from '@heroicons/react/24/outline';
 
+interface Detail {
+  title: string;
+  detail: string;
+}
+
+function DynamicDetailList({
+  details,
+  onAdd,
+  onChange,
+  onRemove,
+  titlePlaceholder,
+  detailPlaceholder,
+  tooltip,
+}: {
+  details: Detail[];
+  onAdd: () => void;
+  onChange: (index: number, field: keyof Detail, value: string) => void;
+  onRemove: (index: number) => void;
+  titlePlaceholder: string;
+  detailPlaceholder: string;
+  tooltip: string;
+}) {
+  return (
+    <div className="mb-6">
+      <div className="flex items-center gap-2">
+        <label className="block text-sm font-medium">{tooltip}</label>
+        <InformationCircleIcon className="h-5 w-5 text-gray-500" title={tooltip} />
+      </div>
+      {details.map((detail, index) => (
+        <div key={index} className="mb-4">
+          {/* Title Field */}
+          <div className="mb-2">
+            <input
+              type="text"
+              placeholder={titlePlaceholder}
+              value={detail.title}
+              onChange={(e) => onChange(index, 'title', e.target.value)}
+              className="block w-full rounded-md border border-gray-200 py-2 px-3 text-sm"
+              required
+            />
+          </div>
+          {/* Detail and Button in the Same Line */}
+          <div className="flex items-center gap-4">
+            <textarea
+              placeholder={detailPlaceholder}
+              value={detail.detail}
+              onChange={(e) => onChange(index, 'detail', e.target.value)}
+              className="flex-1 rounded-md border border-gray-200 py-2 px-3 text-sm"
+              rows={2}
+              maxLength={1028}
+              required
+            />
+            <Button type="button" onClick={() => onRemove(index)}>
+              Esquecer isso!
+            </Button>
+          </div>
+        </div>
+      ))}
+      <Button type="button" onClick={onAdd}>
+        Bora por mais um!
+      </Button>
+    </div>
+  );
+}
+
 export default function Form({ customers }: { customers: CustomerField[] }) {
   const initialState: State = { message: null, errors: {} };
   const [state, formAction] = useActionState(createInvoice, initialState);
-  const [serviceDetails, setServiceDetails] = useState([{ title: '', detail: '' }]);
+  const [serviceDetails, setServiceDetails] = useState<Detail[]>([{ title: '', detail: '' }]);
+  const [problemDetails, setProblemDetails] = useState<Detail[]>([{ title: '', detail: '' }]);
 
-  const handleAddDetail = () => {
-    setServiceDetails([...serviceDetails, { title: '', detail: '' }]);
+  const handleAddDetail = (setDetails: React.Dispatch<React.SetStateAction<Detail[]>>) => {
+    setDetails((prev) => [...prev, { title: '', detail: '' }]);
   };
 
   const handleDetailChange = (
+    setDetails: React.Dispatch<React.SetStateAction<Detail[]>>,
     index: number,
-    field: keyof { title: string; detail: string },
+    field: keyof Detail,
     value: string
   ) => {
-    const updatedDetails = [...serviceDetails];
-    updatedDetails[index][field] = value;
-    setServiceDetails(updatedDetails);
+    setDetails((prev) => {
+      const updatedDetails = [...prev];
+      updatedDetails[index][field] = value;
+      return updatedDetails;
+    });
   };
 
-  const handleRemoveDetail = (index: number) => {
-    const updatedDetails = serviceDetails.filter((_, i) => i !== index);
-    setServiceDetails(updatedDetails);
+  const handleRemoveDetail = (
+    setDetails: React.Dispatch<React.SetStateAction<Detail[]>>,
+    index: number
+  ) => {
+    setDetails((prev) => prev.filter((_, i) => i !== index));
   };
 
   return (
     <form action={formAction}>
       <div className="rounded-md bg-gray-50 p-4 md:p-6">
-
         {/* Service Name */}
         <div className="mb-4">
           <label htmlFor="specialty" className="block text-sm font-medium">
@@ -73,113 +143,34 @@ export default function Form({ customers }: { customers: CustomerField[] }) {
           />
         </div>
 
-        {/* Problem Details */}
-        <div className="mb-6">
-          <div className="flex items-center gap-2">
-            <label className="block text-sm font-medium">Quais serviços você presta dessa especialidade?</label>
-            <InformationCircleIcon
-              className="h-5 w-5 text-gray-500"
-              title="Each detail should describe a story about the type of problem the provider solves."
-            />
-          </div>
-          {serviceDetails.map((detail, index) => (
-            <div key={index} className="mb-4">
-              {/* Title Field */}
-              <div className="mb-2">
-                <input
-                  type="text"
-                  placeholder="Title"
-                  value={detail.title}
-                  onChange={(e) => handleDetailChange(index, 'title', e.target.value)}
-                  className="block w-full rounded-md border border-gray-200 py-2 px-3 text-sm"
-                  required
-                />
-              </div>
-              {/* Detail and Button in the Same Line */}
-              <div className="flex items-center gap-4">
-                <textarea
-                  placeholder="Detail (max 1028 characters)"
-                  value={detail.detail}
-                  onChange={(e) => handleDetailChange(index, 'detail', e.target.value)}
-                  className="flex-1 rounded-md border border-gray-200 py-2 px-3 text-sm"
-                  rows={2}
-                  maxLength={1028}
-                  required
-                />
-                <Button type="button" onClick={() => handleRemoveDetail(index)}>
-                  Esquecer isso!
-                </Button>
-              </div>
-            </div>
-          ))}
-          <Button type="button" onClick={handleAddDetail}>
-            Bora por mais um!
-          </Button>
-        </div>
-
-        {/* Service Images */}
-        {/* <div className="mb-4">
-          <label className="block text-sm font-medium">Service Images</label>
-          <div className="flex items-center gap-4">
-            <div className="flex-1">
-              <div className="h-32 w-full rounded-md border border-gray-200 bg-gray-50 flex items-center justify-center">
-                <p>Image Carousel Placeholder</p>
-              </div>
-            </div>
-            <Button type="button">Save</Button>
-          </div>
-        </div> */}
+        {/* Service Details */}
+        <DynamicDetailList
+          details={serviceDetails}
+          onAdd={() => handleAddDetail(setServiceDetails)}
+          onChange={(index, field, value) => handleDetailChange(setServiceDetails, index, field, value)}
+          onRemove={(index) => handleRemoveDetail(setServiceDetails, index)}
+          titlePlaceholder="Título (ex: Instalação de Ar-condicionado, etc)"
+          detailPlaceholder="Fala mais sobre... (no máximo 1028 characters)"
+          tooltip="Quais serviços você presta dessa especialidade?"
+        />
 
         {/* Problem Details */}
-        <div className="mb-6">
-          <div className="flex items-center gap-2">
-            <label className="block text-sm font-medium">Quais problemas você acredita que resolve dessa especialidade?</label>
-            <InformationCircleIcon
-              className="h-5 w-5 text-gray-500"
-              title="Each detail should describe a story about the type of problem the provider solves."
-            />
-          </div>
-          {serviceDetails.map((detail, index) => (
-            <div key={index} className="mb-4">
-              {/* Title Field */}
-              <div className="mb-2">
-                <input
-                  type="text"
-                  placeholder="Descreva algo como... (Ar-condicionado não gela, Vazamento de água, Ar-condicionado não liga, etc)"
-                  value={detail.title}
-                  onChange={(e) => handleDetailChange(index, 'title', e.target.value)}
-                  className="block w-full rounded-md border border-gray-200 py-2 px-3 text-sm"
-                  required
-                />
-              </div>
-              {/* Detail and Button in the Same Line */}
-              <div className="flex items-center gap-4">
-                <textarea
-                  placeholder="Fala mais sobre... (no máximo 1028 characters)"
-                  value={detail.detail}
-                  onChange={(e) => handleDetailChange(index, 'detail', e.target.value)}
-                  className="flex-1 rounded-md border border-gray-200 py-2 px-3 text-sm"
-                  rows={2}
-                  maxLength={1028}
-                  required
-                />
-                <Button type="button" onClick={() => handleRemoveDetail(index)}>
-                  Esquecer isso!
-                </Button>
-              </div>
-            </div>
-          ))}
-          <Button type="button" onClick={handleAddDetail}>
-            Bora por mais um!
-          </Button>
-        </div>
+        <DynamicDetailList
+          details={problemDetails}
+          onAdd={() => handleAddDetail(setProblemDetails)}
+          onChange={(index, field, value) => handleDetailChange(setProblemDetails, index, field, value)}
+          onRemove={(index) => handleRemoveDetail(setProblemDetails, index)}
+          titlePlaceholder="Descreva algo como... (Ar-condicionado não gela, Vazamento de água, etc)"
+          detailPlaceholder="Fala mais sobre... (no máximo 1028 characters)"
+          tooltip="Quais problemas você acredita que resolve dessa especialidade?"
+        />
       </div>
       <div className="mt-6 flex justify-end gap-4">
         <Link
-          href="/dashboard/invoices"
+          href="/dashboard/services"
           className="flex h-10 items-center rounded-lg bg-gray-100 px-4 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-200"
         >
-          Cancel
+          Cancelar
         </Link>
         <Button type="submit">Criar Serviço!</Button>
       </div>
