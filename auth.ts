@@ -133,12 +133,12 @@ export const { auth, signIn, signOut } = NextAuth({
   callbacks: {
     async jwt({ token, user }: { token: any; user?: User }) {
       if (user) {
-        token.id = user.id;
-        token.name = user.name;
-        token.email = user.email;
-        token.phone = user.phone;
-        token.role = user.role;
-        token.accessToken = user.token;
+        token.id = user.id || token.id;
+        token.name = user.name || token.name;
+        token.email = user.email || token.email;
+        token.phone = user.phone || token.phone;
+        token.role = user.role || token.role;
+        token.accessToken = user.token || token.accessToken;
       }
       return token;
     },

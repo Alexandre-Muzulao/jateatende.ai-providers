@@ -1,21 +1,20 @@
 'use client';
 
 import { CustomerField } from '@/app/lib/definitions';
-import Link from 'next/link';
-import {
-  CheckIcon,
-  ClockIcon,
-  CurrencyDollarIcon,
-  UserCircleIcon,
-} from '@heroicons/react/24/outline';
+import { useState } from 'react';
 import { Button } from '@/app/ui/button';
 import { createService, State } from '@/app/lib/clasmos';
 import { useActionState } from 'react';
-import { useState } from 'react';
+import Link from 'next/link';
 import { InformationCircleIcon } from '@heroicons/react/24/outline';
 
-interface Detail {
-  title: string;
+interface Service {
+  service: string;
+  detail: string;
+}
+
+interface Problem {
+  problem: string;
   detail: string;
 }
 
@@ -28,9 +27,9 @@ function DynamicDetailList({
   detailPlaceholder,
   tooltip,
 }: {
-  details: Detail[];
+  details: { service?: string; problem?: string; detail: string }[];
   onAdd: () => void;
-  onChange: (index: number, field: keyof Detail, value: string) => void;
+  onChange: (index: number, field: 'service' | 'problem' | 'detail', value: string) => void;
   onRemove: (index: number) => void;
   titlePlaceholder: string;
   detailPlaceholder: string;
@@ -39,23 +38,23 @@ function DynamicDetailList({
   return (
     <div className="mb-6">
       <div className="flex items-center gap-2">
-        <label className="block text-sm font-medium">{tooltip}</label>
+        <label className="text-sm font-medium">{tooltip}</label>
         <InformationCircleIcon className="h-5 w-5 text-gray-500" title={tooltip} />
       </div>
       {details.map((detail, index) => (
         <div key={index} className="mb-4">
-          {/* Title Field */}
           <div className="mb-2">
             <input
               type="text"
               placeholder={titlePlaceholder}
-              value={detail.title}
-              onChange={(e) => onChange(index, 'title', e.target.value)}
-              className="block w-full rounded-md border border-gray-200 py-2 px-3 text-sm"
+              value={detail.service || detail.problem || ''} // Lida com `service` ou `problem`
+              onChange={(e) =>
+                onChange(index, detail.service !== undefined ? 'service' : 'problem', e.target.value)
+              }
+              className="w-full rounded-md border border-gray-200 py-2 px-3 text-sm"
               required
             />
           </div>
-          {/* Detail and Button in the Same Line */}
           <div className="flex items-center gap-4">
             <textarea
               placeholder={detailPlaceholder}
@@ -80,19 +79,19 @@ function DynamicDetailList({
 }
 
 export default function Form({ customers }: { customers: CustomerField[] }) {
-  const initialState: State = { message: null, errors: {} };
+  const initialState: State = { message: null, errors: { specialty: [], serviceDescription: [], serviceDetails: [], problemDetails: [] } };
   const [state, formAction] = useActionState(createService, initialState);
-  const [serviceDetails, setServiceDetails] = useState<Detail[]>([{ title: '', detail: '' }]);
-  const [problemDetails, setProblemDetails] = useState<Detail[]>([{ title: '', detail: '' }]);
+  const [services, setServices] = useState<Service[]>([{ service: '', detail: '' }]);
+  const [solvedProblems, setSolvedProblems] = useState<Problem[]>([{ problem: '', detail: '' }]);
 
-  const handleAddDetail = (setDetails: React.Dispatch<React.SetStateAction<Detail[]>>) => {
-    setDetails((prev) => [...prev, { title: '', detail: '' }]);
+  const handleAddDetail = (setDetails: React.Dispatch<React.SetStateAction<any[]>>) => {
+    setDetails((prev) => [...prev, { service: '', detail: '' }]); // Adiciona um novo item vazio
   };
 
   const handleDetailChange = (
-    setDetails: React.Dispatch<React.SetStateAction<Detail[]>>,
+    setDetails: React.Dispatch<React.SetStateAction<any[]>>,
     index: number,
-    field: keyof Detail,
+    field: 'service' | 'problem' | 'detail',
     value: string
   ) => {
     setDetails((prev) => {
@@ -102,17 +101,42 @@ export default function Form({ customers }: { customers: CustomerField[] }) {
     });
   };
 
-  const handleRemoveDetail = (
-    setDetails: React.Dispatch<React.SetStateAction<Detail[]>>,
-    index: number
-  ) => {
+  const handleRemoveDetail = (setDetails: React.Dispatch<React.SetStateAction<any[]>>, index: number) => {
     setDetails((prev) => prev.filter((_, i) => i !== index));
   };
 
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+
+    console.log('Form data:', formData);
+
+    // Filtra serviços válidos (com `service` preenchido) e mapeia corretamente
+    formData.set(
+      'services',
+      JSON.stringify(
+        services
+          .filter((service) => service.service?.trim() !== '' && service.detail?.trim() !== '') // Verifica se ambos os campos estão preenchidos
+          .map(({ service, detail }) => ({ service, detail }))
+      )
+    );
+
+    // Mapeia os problemas resolvidos
+    formData.set(
+      'solvedProblems',
+      JSON.stringify(
+        solvedProblems
+          .filter((problem) => problem.problem?.trim() !== '' && problem.detail?.trim() !== '') // Verifica se ambos os campos estão preenchidos
+          .map(({ problem, detail }) => ({ problem, detail }))
+      )
+    );
+
+    createService(state, formData);
+  };
+
   return (
-    <form action={formAction}>
+    <form onSubmit={handleSubmit}>
       <div className="rounded-md bg-gray-50 p-4 md:p-6">
-        {/* Service Name */}
         <div className="mb-4">
           <label htmlFor="specialty" className="block text-sm font-medium">
             Qual nome você daria para a especialidade desse serviço?
@@ -127,42 +151,24 @@ export default function Form({ customers }: { customers: CustomerField[] }) {
           />
         </div>
 
-        {/* Service Description */}
-        <div className="mb-4">
-          <label htmlFor="serviceDescription" className="block text-sm font-medium">
-            Como você pesquisaria sobre esse serviço?
-          </label>
-          <textarea
-            id="serviceDescription"
-            name="serviceDescription"
-            placeholder="Conta ai com mais detalhes... (no máximo 1028 characters)"
-            maxLength={1028}
-            className="block w-full rounded-md border border-gray-200 py-2 px-3 text-sm"
-            rows={3}
-            required
-          />
-        </div>
-
-        {/* Service Details */}
         <DynamicDetailList
-          details={serviceDetails}
-          onAdd={() => handleAddDetail(setServiceDetails)}
-          onChange={(index, field, value) => handleDetailChange(setServiceDetails, index, field, value)}
-          onRemove={(index) => handleRemoveDetail(setServiceDetails, index)}
-          titlePlaceholder="Título (ex: Instalação de Ar-condicionado, etc)"
-          detailPlaceholder="Fala mais sobre... (no máximo 1028 characters)"
-          tooltip="Quais serviços você presta dessa especialidade?"
+          details={services}
+          onAdd={() => handleAddDetail(setServices)}
+          onChange={(index, field, value) => handleDetailChange(setServices, index, field, value)}
+          onRemove={(index) => handleRemoveDetail(setServices, index)}
+          titlePlaceholder="Serviço (ex: Instalação de ar-condicionado)"
+          detailPlaceholder="Detalhes do serviço"
+          tooltip="Adicione os serviços que você presta"
         />
 
-        {/* Problem Details */}
         <DynamicDetailList
-          details={problemDetails}
-          onAdd={() => handleAddDetail(setProblemDetails)}
-          onChange={(index, field, value) => handleDetailChange(setProblemDetails, index, field, value)}
-          onRemove={(index) => handleRemoveDetail(setProblemDetails, index)}
-          titlePlaceholder="Descreva algo como... (Ar-condicionado não gela, Vazamento de água, etc)"
-          detailPlaceholder="Fala mais sobre... (no máximo 1028 characters)"
-          tooltip="Quais problemas você acredita que resolve dessa especialidade?"
+          details={solvedProblems}
+          onAdd={() => handleAddDetail(setSolvedProblems)}
+          onChange={(index, field, value) => handleDetailChange(setSolvedProblems, index, field, value)}
+          onRemove={(index) => handleRemoveDetail(setSolvedProblems, index)}
+          titlePlaceholder="Problema resolvido (ex: Ar-condicionado não gela)"
+          detailPlaceholder="Detalhes do problema resolvido"
+          tooltip="Adicione os problemas que você resolve"
         />
       </div>
       <div className="mt-6 flex justify-end gap-4">

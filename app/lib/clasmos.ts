@@ -1,133 +1,99 @@
-'use server'
+'use server';
 
 import { z } from 'zod';
-import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { signIn} from '@/auth';
-import { AuthError } from 'next-auth';
-import { stringify } from 'querystring';
 import axios from 'axios';
 
-const axiosInstance = axios.create({
-  baseURL: `${process.env.CLASMOS_URL}`,
-  headers: {
-    'Content-Type': 'application/json'
-    }
-})
+// Função para obter o token da sessão do usuário
+async function getTokenFromSession(): Promise<string | null> {
+  // Substitua isso pelo método correto para acessar o token da sessão
+  const token = await fetch('/api/session').then((res) => res.json()).then((data) => data.token);
+  return token;
+}
+
+// Criação do cliente Axios com token dinâmico
+async function createAxiosInstance() {
+  const token = await getTokenFromSession();
+  return axios.create({
+    baseURL: `${process.env.CLASMOS_URL}`,
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: token ? `Bearer ${token}` : '',
+    },
+  });
+}
 
 export type State = {
   errors?: {
-    customerId?: string[];
-    amount?: string[];
-    status?: string[];
+    specialty?: string[];
+    serviceDescription?: string[];
+    serviceDetails?: string[];
+    problemDetails?: string[];
   };
   message?: string | null;
 };
 
-const FormSchema = z.object({
-  id: z.string(),
-  customerId: z.string({
-    invalid_type_error: 'Please select a customer.',
-  }),
-  amount: 
-    z.coerce
-    .number()
-    .gt(0, { message: 'Please enter an amount greater than $0.' }),
-  status: z.enum(['pending', 'paid'],{
-    invalid_type_error: 'Please select an invoice status.',
-  }),
-  date: z.string(),
+// Define o esquema de validação para os campos do formulário
+const CreateServiceSchema = z.object({
+  specialty: z.string().min(1, { message: 'O campo especialidade é obrigatório.' }),
+  serviceDescription: z
+    .string()
+    .max(1028, { message: 'A descrição do serviço deve ter no máximo 1028 caracteres.' }),
+  serviceDetails: z
+    .array(
+      z.object({
+        title: z.string().min(1, { message: 'O título do serviço é obrigatório.' }),
+        detail: z
+          .string()
+          .max(1028, { message: 'O detalhamento do serviço deve ter no máximo 1028 caracteres.' }),
+      })
+    )
+    .min(1, { message: 'Adicione pelo menos um serviço.' }),
+  problemDetails: z
+    .array(
+      z.object({
+        title: z.string().min(1, { message: 'O título do problema é obrigatório.' }),
+        detail: z
+          .string()
+          .max(1028, { message: 'O detalhamento do problema deve ter no máximo 1028 caracteres.' }),
+      })
+    )
+    .min(1, { message: 'Adicione pelo menos um problema.' }),
 });
 
-// export async function createService(
-//   state: { message: any } | undefined,
-//   formData: FormData
-// ): Promise<{ message: any }> {
-
-//   const data = {
-//     name: formData.get('name'),
-//     phone: formData.get('phone'),
-//     email: formData.get('email'),
-//     password: formData.get('password'),
-//     role: 'PROVIDER',
-//   };
-
-//   try {
-//     const response = await axiosInstance.post('/auth/register', data); // Use the axios instance to make the request
-    
-//     if (response.status === 200) {
-//       const { token, user } = response.data; // Extrai o token e o usuário do response
-
-//       // Cria um objeto FormData para passar as credenciais para o método authenticate
-//       const authFormData = new FormData();
-//       authFormData.append('email', user.email);
-//       authFormData.append('password', formData.get('password') as string);
-//       authFormData.append('userId', user._id as string);
-//       authFormData.append('token', token as string);
-
-//       localStorage.setItem('authToken', token); // Armazena o token no localStorage
-//       // Redireciona para o dashboard
-//       redirect('/dashboard');
-//     } else {
-//       return {
-//         message: response.data.message || 'Erro ao registrar usuário.',
-//       };
-//     }
-//   } catch (error: any) {
-//     console.log('Response:', error); // Log the response data
-
-//     return {
-//       message: error.response?.data?.message || 'Erro ao conectar com o servidor.',
-//     };
-//   }
-// }
-
-const CreateService = FormSchema.omit({ id: true, date: true });
-
 export async function createService(prevState: State, formData: FormData) {
-  // Validate form using Zod
-  const validatedFields = CreateService.safeParse({
-    customerId: formData.get('customerId'),
-    amount: formData.get('amount'),
-    status: formData.get('status'),
-  });
-
-   const data = {
-    name: formData.get('name'),
-    phone: formData.get('phone'),
-    email: formData.get('email'),
-    password: formData.get('password'),
-    role: 'PROVIDER',
+  const data = {
+    specialty: formData.get('specialty') as string,
+    services: JSON.parse(formData.get('services') as string),
+    solvedProblems: JSON.parse(formData.get('solvedProblems') as string),
   };
 
+  console.log('Data to be sent:', data);
+  
+
+  const validatedFields = CreateServiceSchema.safeParse(data);
+
+  if (!validatedFields.success) {
+    return {
+      ...prevState,
+      errors: validatedFields.error.flatten().fieldErrors,
+    };
+  }
+
   try {
-    const response = await axiosInstance.post('/auth/register', data); // Use the axios instance to make the request
-    
-    if (response.status === 200) {
-      const { token, user } = response.data; // Extrai o token e o usuário do response
+    const axiosInstance = await createAxiosInstance();
+    const response = await axiosInstance.post('/services', validatedFields.data);
 
-      // Cria um objeto FormData para passar as credenciais para o método authenticate
-      const authFormData = new FormData();
-      authFormData.append('email', user.email);
-      authFormData.append('password', formData.get('password') as string);
-      authFormData.append('userId', user._id as string);
-      authFormData.append('token', token as string);
-
-      localStorage.setItem('authToken', token); // Armazena o token no localStorage
-      // Redireciona para o dashboard
-      redirect('/dashboard');
+    if (response.status === 201) {
+      redirect('/dashboard/services');
     } else {
       return {
-        message: response.data.message || 'Erro ao registrar usuário.',
+        message: response.data.message || 'Erro ao criar o serviço.',
       };
     }
   } catch (error: any) {
-    console.log('Response:', error); // Log the response data
-
     return {
       message: error.response?.data?.message || 'Erro ao conectar com o servidor.',
     };
   }
-  
-  
 }
