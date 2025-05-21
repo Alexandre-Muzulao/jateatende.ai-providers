@@ -3,12 +3,19 @@
 import { z } from 'zod';
 import { redirect } from 'next/navigation';
 import axios from 'axios';
+import { cookies } from 'next/headers';
 
 // Função para obter o token da sessão do usuário
 async function getTokenFromSession(): Promise<string | null> {
-  // Substitua isso pelo método correto para acessar o token da sessão
-  const token = await fetch('/api/session').then((res) => res.json()).then((data) => data.token);
-  return token;
+  try {
+    // Obtém o token diretamente dos cookies
+    const token = (await cookies()).get('authjs.session-token')?.value || null;
+    console.log('Token from cookies:', token);
+    return token;
+  } catch (error) {
+    console.error('Error fetching token from session:', error);
+    return null;
+  }
 }
 
 // Criação do cliente Axios com token dinâmico
@@ -26,9 +33,8 @@ async function createAxiosInstance() {
 export type State = {
   errors?: {
     specialty?: string[];
-    serviceDescription?: string[];
-    serviceDetails?: string[];
-    problemDetails?: string[];
+    services?: object;
+    solvedProblems?: object[];
   };
   message?: string | null;
 };
@@ -36,23 +42,20 @@ export type State = {
 // Define o esquema de validação para os campos do formulário
 const CreateServiceSchema = z.object({
   specialty: z.string().min(1, { message: 'O campo especialidade é obrigatório.' }),
-  serviceDescription: z
-    .string()
-    .max(1028, { message: 'A descrição do serviço deve ter no máximo 1028 caracteres.' }),
-  serviceDetails: z
+  services: z
     .array(
       z.object({
-        title: z.string().min(1, { message: 'O título do serviço é obrigatório.' }),
+        service: z.string().min(1, { message: 'O título do serviço é obrigatório.' }),
         detail: z
           .string()
           .max(1028, { message: 'O detalhamento do serviço deve ter no máximo 1028 caracteres.' }),
       })
     )
     .min(1, { message: 'Adicione pelo menos um serviço.' }),
-  problemDetails: z
+  solvedProblems: z
     .array(
       z.object({
-        title: z.string().min(1, { message: 'O título do problema é obrigatório.' }),
+        problem: z.string().min(1, { message: 'O título do problema é obrigatório.' }),
         detail: z
           .string()
           .max(1028, { message: 'O detalhamento do problema deve ter no máximo 1028 caracteres.' }),
@@ -68,9 +71,6 @@ export async function createService(prevState: State, formData: FormData) {
     solvedProblems: JSON.parse(formData.get('solvedProblems') as string),
   };
 
-  console.log('Data to be sent:', data);
-  
-
   const validatedFields = CreateServiceSchema.safeParse(data);
 
   if (!validatedFields.success) {
@@ -80,9 +80,12 @@ export async function createService(prevState: State, formData: FormData) {
     };
   }
 
+  console.log(validatedFields.data)
+
   try {
     const axiosInstance = await createAxiosInstance();
-    const response = await axiosInstance.post('/services', validatedFields.data);
+    const response = await axiosInstance.post('/service-providers', validatedFields.data);
+    console.log('Response from server:', response);
 
     if (response.status === 201) {
       redirect('/dashboard/services');
@@ -92,6 +95,7 @@ export async function createService(prevState: State, formData: FormData) {
       };
     }
   } catch (error: any) {
+    console.error('Error creating service:', error);
     return {
       message: error.response?.data?.message || 'Erro ao conectar com o servidor.',
     };

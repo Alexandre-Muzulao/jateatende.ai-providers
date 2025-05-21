@@ -1,6 +1,6 @@
 'use client';
 
-import { CustomerField } from '@/app/lib/definitions';
+import { ServiceForm } from '@/app/lib/definitions';
 import { useState } from 'react';
 import { Button } from '@/app/ui/button';
 import { createService, State } from '@/app/lib/clasmos';
@@ -70,66 +70,6 @@ function ServiceList({
   );
 }
 
-// function DynamicDetailList({
-//   details,
-//   onAdd,
-//   onChange,
-//   onRemove,
-//   titlePlaceholder,
-//   detailPlaceholder,
-//   tooltip,
-// }: {
-//   details: { service?: string; problem?: string; detail: string }[];
-//   onAdd: () => void;
-//   onChange: (index: number, field: 'service' | 'problem' | 'detail', value: string) => void;
-//   onRemove: (index: number) => void;
-//   titlePlaceholder: string;
-//   detailPlaceholder: string;
-//   tooltip: string;
-// }) {
-//   return (
-//     <div className="mb-6">
-//       <div className="flex items-center gap-2">
-//         <label className="text-sm font-medium">{tooltip}</label>
-//         <InformationCircleIcon className="h-5 w-5 text-gray-500" title={tooltip} />
-//       </div>
-//       {details.map((detail, index) => (
-//         <div key={index} className="mb-4">
-//           <div className="mb-2">
-//             <input
-//               type="text"
-//               placeholder={titlePlaceholder}
-//               value={detail.service || detail.problem || ''} // Lida com `service` ou `problem`
-//               onChange={(e) =>
-//                 onChange(index, detail.service !== undefined ? 'service' : 'problem', e.target.value)
-//               }
-//               className="w-full rounded-md border border-gray-200 py-2 px-3 text-sm"
-//               required
-//             />
-//           </div>
-//           <div className="flex items-center gap-4">
-//             <textarea
-//               placeholder={detailPlaceholder}
-//               value={detail.detail}
-//               onChange={(e) => onChange(index, 'detail', e.target.value)}
-//               className="flex-1 rounded-md border border-gray-200 py-2 px-3 text-sm"
-//               rows={2}
-//               maxLength={1028}
-//               required
-//             />
-//             <Button type="button" onClick={() => onRemove(index)}>
-//               Esquecer isso!
-//             </Button>
-//           </div>
-//         </div>
-//       ))}
-//       <Button type="button" onClick={onAdd}>
-//         Bora por mais um!
-//       </Button>
-//     </div>
-//   );
-// }
-
 function ProblemList({
   problems,
   onAdd,
@@ -182,7 +122,7 @@ function ProblemList({
   );
 }
 
-export default function Form({ customers }: { customers: CustomerField[] }) {
+export default function Form({ ServiceForm }: { ServiceForm: ServiceForm[] }) {
   const initialState: State = { message: null, errors: { specialty: [], serviceDescription: [], serviceDetails: [], problemDetails: [] } };
   const [state, formAction] = useActionState(createService, initialState);
   const [services, setServices] = useState<Service[]>([{ service: '', detail: '' }]);
