@@ -1,6 +1,6 @@
 'use client';
 
-import { lusitana } from '@/app/ui/fonts';
+
 import {
   AtSymbolIcon,
   PhoneArrowDownLeftIcon,
@@ -26,7 +26,7 @@ export default function RegisterForm() {
   return (
     <form action={formAction} className="space-y-3 text-white">
       <div className="flex-1 rounded-lg bg-gray-900 px-6 pb-4 pt-8">
-        <h1 className={`${lusitana.className} mb-3 text-2xl`}>
+        <h1 className="mb-3 text-2xl">
           Registre-se.
         </h1>
         <div className="w-full">

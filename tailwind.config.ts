@@ -1,21 +1,6 @@
 import type { Config } from 'tailwindcss';
 
-const colors = {
-  blue: {
-    400: '#2589FE',
-    500: '#0070F3',
-    600: '#2F6FEB',
-  },
-  primary: {
-    DEFAULT: '#f3b05a', // Cor principal
-    light: '#f39452',   // Variante mais clara
-    dark: '#ef774e',    // Variante mais escura
-  },
-  background: {
-    light: '#ffffff',   // Fundo claro (modo padrão)
-    dark: '#1d2935',    // Fundo escuro (modo dark)
-  },
-};
+
 
 const config: Config = {
   darkMode: 'class', // Habilita o dark mode baseado em classes
@@ -26,18 +11,14 @@ const config: Config = {
   ],
   theme: {
     extend: {
-      gridTemplateColumns: {
-        '13': 'repeat(13, minmax(0, 1fr))',
+      fontFamily: {
+        sans: ['var(--font-ample-soft)', 'sans-serif'],
       },
-      colors,
-      backgroundColor: {
-        ...colors,
-        'primary-light': '#f39452',
-        'primary-dark': '#ef774e',
-      },
-      textColor: {
-        ...colors,
-        'primary-light': '#f39452',
+      colors: {
+        primary: '#f39452',
+        secondary: '#f3b05a',
+        warning: '#ef774e',
+        dark: '#1d2935',
       },
     },
     keyframes: {

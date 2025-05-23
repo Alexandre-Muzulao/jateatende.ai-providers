@@ -1,13 +1,24 @@
-import { GlobeAltIcon } from '@heroicons/react/24/outline';
-import { lusitana } from '@/app/ui/fonts';
+import Image from 'next/image';
 
-export default function AcmeLogo() {
+
+
+interface AcmeLogoProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  lightMode?: boolean;
+  width?: number;
+  height?: number;
+}
+
+export default function AcmeLogo({ lightMode = false, width = 300, height = 300 }: AcmeLogoProps) {
   return (
     <div
-      className={`${lusitana.className} flex flex-row items-center leading-none text-white`}
+      className="flex items-center justify-center"
     >
-      <p className="text-[40px]">jateatende.ai</p>
-      <GlobeAltIcon className="h-12 w-12 rotate-[15deg]" />
+      <Image
+        src={`/images/${lightMode ? 'logo-provider-light.png' : 'logo-provider.png'}`}
+        width={width}
+        height={height}
+        alt="Logo"
+      />
     </div>
   );
 }
