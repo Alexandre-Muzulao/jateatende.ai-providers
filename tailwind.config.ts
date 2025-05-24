@@ -18,7 +18,7 @@ const config: Config = {
         primary: '#f39452',
         secondary: '#f3b05a',
         warning: '#ef774e',
-        dark: '#1d2935',
+        black: '#1d2935',
       },
     },
     keyframes: {

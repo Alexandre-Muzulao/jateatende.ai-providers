@@ -14,7 +14,7 @@ export default function AcmeLogo({ lightMode = false, width = 300, height = 300 
       className="flex items-center justify-center"
     >
       <Image
-        src={`/images/${lightMode ? 'logo-provider-light.png' : 'logo-provider.png'}`}
+        src={`/images/${lightMode ? 'logo-light.png' : 'logo.png'}`}
         width={width}
         height={height}
         alt="Logo"
