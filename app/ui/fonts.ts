@@ -1,8 +1,19 @@
-import { Inter, Lusitana } from 'next/font/google';
- 
-export const inter = Inter({ subsets: ['latin'] });
+import localFont from 'next/font/local';
 
-export const lusitana = Lusitana({
-    weight: ['400', '700'],
-    subsets: ['latin'],
-  });
+export const ampleSoft = localFont(
+  {
+    variable: '--font-ample-soft',
+    src: [
+      {
+        path: '../../public/fonts/AmpleSoftProRegular.ttf',
+        weight: '400',
+        style: 'normal',
+      },
+      {
+        path: '../../public/fonts/AmpleSoftProMedium.ttf',
+        weight: '700',
+        style: 'normal',
+      },
+    ],
+  }
+);

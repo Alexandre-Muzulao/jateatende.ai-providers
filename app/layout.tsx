@@ -1,5 +1,5 @@
 import '@/app/ui/global.css';
-import { inter } from '@/app/ui/fonts';
+import { ampleSoft } from '@/app/ui/fonts';
 
 export default function RootLayout({
   children,
@@ -7,8 +7,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="pt-br" className="dark:bg-background-dark">
-      <body className={`${inter.className} antialiased`}>{children}</body>
+    <html lang="pt-br" className={`${ampleSoft.variable} dark:bg-background-dark`}>
+      <body className="antialiased">{children}</body>
     </html>
   );
 }
