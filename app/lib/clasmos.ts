@@ -1,19 +1,18 @@
-'use server';
+'use client';
 
 import { z } from 'zod';
 import { redirect } from 'next/navigation';
 import axios from 'axios';
-import { cookies } from 'next/headers';
 
 // Função para obter o token da sessão do usuário
 async function getTokenFromSession(): Promise<string | null> {
   try {
-    // Obtém o token diretamente dos cookies
-    const token = (await cookies()).get('authjs.session-token')?.value || null;
-    console.log('Token from cookies:', token);
+    // Obtém o token diretamente do Session Storage no cliente
+    const token = typeof window !== 'undefined' ? sessionStorage.getItem('Token') : null;
+    console.log('Token from Session Storage:', token);
     return token;
   } catch (error) {
-    console.error('Error fetching token from session:', error);
+    console.error('Error fetching token from Session Storage:', error);
     return null;
   }
 }

@@ -12,6 +12,7 @@ interface User extends Omit<BaseUser, 'token'> {
 }
 
 declare module 'next-auth' {
+
   interface Session {
     user: User;
     accessToken?: string;
@@ -28,6 +29,7 @@ declare module 'next-auth' {
 
   interface AdapterUser extends User {}
 }
+
 import bcrypt from 'bcryptjs';
 import axios from 'axios';
 
@@ -125,7 +127,9 @@ export const { auth, signIn, signOut } = NextAuth({
   ],
   callbacks: {
     async jwt({ token, user }: { token: any; user?: User }) {
+
       console.log('JWT callback:', token, user);
+
       if (user) {
         token.id = user.id || token.id;
         token.name = user.name || token.name;
@@ -133,10 +137,20 @@ export const { auth, signIn, signOut } = NextAuth({
         token.phone = user.phone || token.phone;
         token.role = user.role || token.role;
         token.accessToken = user.token || token.accessToken;
+
+        // Salvar o token no Session Storage
+        if (typeof window !== 'undefined' && token.accessToken) {
+          sessionStorage.setItem('Token', token.accessToken);
+          console.log('Token saved to Session Storage:', token.accessToken);
+        }
       }
+
       return token;
     },
     async session({ session, token }: { session: any; token: any }) {
+
+      console.log('Session callback:', session, token);
+
       if (token) {
         session.user = {
           id: token.id,
@@ -150,6 +164,6 @@ export const { auth, signIn, signOut } = NextAuth({
         session.accessToken = token.accessToken;
       }
       return session;
-    },
+    }
   },
 });
