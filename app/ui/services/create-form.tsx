@@ -169,6 +169,21 @@ export default function Form({ ServiceForm }: { ServiceForm: ServiceForm[] }) {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
 
+    formData.set('specialty', formData.get('specialty') as string);
+    formData.set('location', formData.get('location') as string);
+    
+    const availability = [];
+    for (let i = 0; i < 7; i++) {
+      const start = formData.get(`availability[${i}][start]`) as string;
+      const end = formData.get(`availability[${i}][end]`) as string;
+      if (start && end) {
+        availability.push({ start, end });
+      }
+    }
+
+    formData.set('availability', JSON.stringify(availability));
+    formData.set('acceptScheduling', formData.get('acceptScheduling') as string);
+
     formData.set(
       'services',
       JSON.stringify(
@@ -205,6 +220,73 @@ export default function Form({ ServiceForm }: { ServiceForm: ServiceForm[] }) {
             className="block w-full rounded-md border border-gray-200 py-2 px-3 text-sm"
             required
           />
+        </div>
+        
+        <div className="mb-4">
+          <label htmlFor="location" className="block text-sm font-medium">
+            Qual região você estará disponível para fazer esse atendimento?
+          </label>
+          <input
+            id="location"
+            name="location"
+            type="text"
+            placeholder="Selecionar região (ex: Zona Sul, Zona Norte, etc)"
+            className="block w-full rounded-md border border-gray-200 py-2 px-3 text-sm"
+            required
+          />
+        </div>
+
+        <div className="mb-4">
+          <label className="block text-sm font-medium mb-2">
+            Quais dias e horários você estará disponível para fazer esse atendimento?
+          </label>
+          <div className="space-y-2">
+            {[
+              'Domingo',
+              'Segunda-feira',
+              'Terça-feira',
+              'Quarta-feira',
+              'Quinta-feira',
+              'Sexta-feira',
+              'Sábado',
+            ].map((day, idx) => (
+              <div key={day} className="flex items-center gap-4">
+          <label className="w-32 text-sm">{day}</label>
+          <input
+            type="time"
+            name={`availability[${idx}][start]`}
+            className="rounded-md border border-gray-200 py-1 px-2 text-sm"
+            required={false}
+          />
+          <span className="text-xs text-gray-500">até</span>
+          <input
+            type="time"
+            name={`availability[${idx}][end]`}
+            className="rounded-md border border-gray-200 py-1 px-2 text-sm"
+            required={false}
+          />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="mb-4">
+          <label htmlFor="acceptScheduling" className="block text-sm font-medium">
+            Você aceitará agendar serviços?
+          </label>
+          <select
+            id="acceptScheduling"
+            name="acceptScheduling"
+            className="block w-full rounded-md border border-gray-200 py-2 px-3 text-sm"
+            required
+            defaultValue=""
+          >
+            <option value="" disabled>
+              Selecione uma opção
+            </option>
+            <option value="true">Sim</option>
+            <option value="false">Não</option>
+          </select>
         </div>
 
         <ServiceList
