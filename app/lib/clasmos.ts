@@ -3,6 +3,7 @@
 import { z } from 'zod';
 import { redirect } from 'next/navigation';
 import axios from 'axios';
+import { scheduler } from 'timers/promises';
 
 // Função para obter o token da sessão do usuário
 async function getTokenFromSession(): Promise<string | null> {
@@ -20,9 +21,8 @@ async function getTokenFromSession(): Promise<string | null> {
 // Criação do cliente Axios com token dinâmico
 async function createAxiosInstance() {
   // const token = await getTokenFromSession();
-  const token = `eyJhbGciOiJkaXIiLCJlbmMiOiJBMjU2R0NNIn0..SoujWlfl6t2aMkiZ.ehB9BggRmOJar4gSpMNSSRBrjh2qvrtvELkZKe0E2GcrBbq1dKby67gpjkCOhJ8mdRj6pkrOhl-DjqI6-7imdvHI9cxWh8aKzilE4_3jYXCEdqAoe9StiJASnEHOnNq0XUZZo9sgdat4Uwepk2Qc6gm1NOVU4JAc1ly5s83VqD4llQyc258cDNaPz9w68gJqSMKq59672cL-csU.dunWgOgaCX1O7E5nmws2fA`
+  const token = `eyJhbGciOiJkaXIiLCJlbmMiOiJBMjU2R0NNIn0..lkrwqc5BUcb2y9wY.5CLfGL_5lGEHJbsww7nsF8ioDJnCdRDWJpOyAlY8cRP1Hqe0LWVDrikkJ8WBEvit-lHd8DYnzbYqitVmQ7l916Uhui95bVF60bnFmAHV0coEy0Jf8ac0GSZCinir-CaDLlQfBXu99sS5fZLGjZhz8UyVqKkGJyZGwHaNmpSDGaqKXmi3aaqu2tOZMinRy5GpIU6PCuGslBBedxg.ifbYnmY4tduKZ77_bR37CQ`
 
-  console.log('Token used for Axios instance:', token);
 
   return axios.create({
     baseURL: `http://localhost:3003`,
@@ -35,59 +35,79 @@ async function createAxiosInstance() {
 
 export type State = {
   errors?: {
-    specialty?: string[];
     location?: string[];
-    availability?: object[];
-    acceptScheduling?: boolean
-    services?: object;
-    solvedProblems?: object[];
+    schedule?: {
+      initialWeekDay?: string;
+      finalWeekDay?: string;
+      initialHour?: string;
+      finalHour?: string;
+    }[];
+    availableOutsideSchedule?: string[];
+    specialties?: {
+      specialty?: string;
+      services?: {
+        service?: string;
+        detail?: string;
+      }[];
+      solvedProblems?: {
+        problem?: string;
+        detail?: string;
+      }[];
+    }[];
   };
   message?: string | null;
 };
 
 // Define o esquema de validação para os campos do formulário
 const CreateServiceSchema = z.object({
-  specialty: z.string().min(1, { message: 'O campo especialidade é obrigatório.' }),
   location: z.string().min(1, { message: 'O campo localização é obrigatório.' }),
-  availability: z
+  schedule: z
     .array(
       z.object({
-        start: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, { message: 'Horário inicial inválido.' }),
-        end: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, { message: 'Horário final inválido.' }),
+        initialWeekDay: z.string().min(1, { message: 'O dia inicial é obrigatório.' }),
+        finalWeekDay: z.string().min(1, { message: 'O dia final é obrigatório.' }),
+        initialHour: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, { message: 'Horário inicial inválido.' }),
+        finalHour: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, { message: 'Horário final inválido.' }),
       })
     )
-    .min(1, { message: 'Adicione pelo menos um dia de disponibilidade.' }),
-  acceptScheduling: z.enum(['true', 'false'], { message: 'Selecione uma opção válida para agendamento.' }),
-  services: z
+    .min(1, { message: 'Adicione pelo menos um horário de disponibilidade.' }),
+  availableOutsideSchedule: z.enum(['true', 'false'], { message: 'Selecione uma opção válida para agendamento.' }),
+  specialties: z
     .array(
       z.object({
-        service: z.string().min(1, { message: 'O título do serviço é obrigatório.' }),
-        detail: z
-          .string()
-          .max(1028, { message: 'O detalhamento do serviço deve ter no máximo 1028 caracteres.' }),
+        specialty: z.string().min(1, { message: 'O campo especialidade é obrigatório.' }),
+        services: z
+          .array(
+            z.object({
+              service: z.string().min(1, { message: 'O título do serviço é obrigatório.' }),
+              detail: z
+                .string()
+                .max(1028, { message: 'O detalhamento do serviço deve ter no máximo 1028 caracteres.' }),
+            })
+          )
+          .min(1, { message: 'Adicione pelo menos um serviço.' }),
+        solvedProblems: z
+          .array(
+            z.object({
+              problem: z.string().min(1, { message: 'O título do problema é obrigatório.' }),
+              detail: z
+                .string()
+                .max(1028, { message: 'O detalhamento do problema deve ter no máximo 1028 caracteres.' }),
+            })
+          )
+          .min(1, { message: 'Adicione pelo menos um problema.' }),
       })
     )
-    .min(1, { message: 'Adicione pelo menos um serviço.' }),
-  solvedProblems: z
-    .array(
-      z.object({
-        problem: z.string().min(1, { message: 'O título do problema é obrigatório.' }),
-        detail: z
-          .string()
-          .max(1028, { message: 'O detalhamento do problema deve ter no máximo 1028 caracteres.' }),
-      })
-    )
-    .min(1, { message: 'Adicione pelo menos um problema.' }),
+    .min(1, { message: 'Adicione pelo menos uma especialidade.' }),
 });
 
 export async function createService(prevState: State, formData: FormData) {
+
   const data = {
-    specialty: formData.get('specialty') as string,
     location: formData.get('location') as string,
-    availability: JSON.parse(formData.get('availability') as string),
-    acceptScheduling: formData.get('acceptScheduling') as string,
-    services: JSON.parse(formData.get('services') as string),
-    solvedProblems: JSON.parse(formData.get('solvedProblems') as string),
+    schedule: JSON.parse(formData.get('schedule') as string), // Adiciona o campo schedule
+    availableOutsideSchedule: formData.get('availableOutsideSchedule'), // Converte para booleano
+    specialties: JSON.parse(formData.get('specialties') as string), // Adiciona o campo specialties
   };
 
   const validatedFields = CreateServiceSchema.safeParse(data);
@@ -99,15 +119,12 @@ export async function createService(prevState: State, formData: FormData) {
     };
   }
 
-  console.log(validatedFields.data)
-
   try {
     const axiosInstance = await createAxiosInstance();
-    console.log(axiosInstance)
     const response = await axiosInstance.post('/service-providers', validatedFields.data);
-    console.log('Response from server:', response);
 
     if (response.status === 201) {
+      
       redirect('/dashboard/services');
     } else {
       return {

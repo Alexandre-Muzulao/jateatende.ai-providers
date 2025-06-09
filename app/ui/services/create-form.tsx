@@ -123,7 +123,7 @@ function ProblemList({
 }
 
 export default function Form({ ServiceForm }: { ServiceForm: ServiceForm[] }) {
-  const initialState: State = { message: null, errors: { specialty: [], serviceDescription: [], serviceDetails: [], problemDetails: [] } };
+  const initialState: State = { message: null, errors: { location: [], schedule: [], availableOutsideSchedule: [], specialties: [] } };
   const [state, formAction] = useActionState(createService, initialState);
   const [services, setServices] = useState<Service[]>([{ service: '', detail: '' }]);
   const [solvedProblems, setSolvedProblems] = useState<Problem[]>([{ problem: '', detail: '' }]);
@@ -169,38 +169,47 @@ export default function Form({ ServiceForm }: { ServiceForm: ServiceForm[] }) {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
 
-    formData.set('specialty', formData.get('specialty') as string);
-    formData.set('location', formData.get('location') as string);
-    
-    const availability = [];
-    for (let i = 0; i < 7; i++) {
-      const start = formData.get(`availability[${i}][start]`) as string;
-      const end = formData.get(`availability[${i}][end]`) as string;
-      if (start && end) {
-        availability.push({ start, end });
-      }
-    }
+    const daysOfWeek = [
+      'SUNDAY',
+      'MONDAY',
+      'TUESDAY',
+      'WEDNESDAY',
+      'THURSDAY',
+      'FRIDAY',
+      'SATURDAY',
+    ];
 
-    formData.set('availability', JSON.stringify(availability));
-    formData.set('acceptScheduling', formData.get('acceptScheduling') as string);
+    const schedule = daysOfWeek
+      .map((day, index) => ({
+        initialWeekDay: day,
+        finalWeekDay: day,
+        initialHour: formData.get(`availability[${index}][start]`) as string,
+        finalHour: formData.get(`availability[${index}][end]`) as string,
+      }))
+      .filter(
+        (item) =>
+          item.initialHour && item.finalHour // Filtra apenas os dias com horários preenchidos
+      );
 
-    formData.set(
-      'services',
-      JSON.stringify(
-        services
+    const specialties = [
+      {
+        specialty: formData.get('specialty') as string,
+        services: services
           .filter((service) => service.service.trim() !== '' && service.detail.trim() !== '')
-          .map(({ service, detail }) => ({ service, detail }))
-      )
-    );
-
-    formData.set(
-      'solvedProblems',
-      JSON.stringify(
-        solvedProblems
+          .map(({ service, detail }) => ({ service, detail })),
+        solvedProblems: solvedProblems
           .filter((problem) => problem.problem.trim() !== '' && problem.detail.trim() !== '')
-          .map(({ problem, detail }) => ({ problem, detail }))
-      )
-    );
+          .map(({ problem, detail }) => ({ problem, detail })),
+      },
+    ];
+
+    formData.set('location', formData.get('location') as string);
+    formData.set('schedule', JSON.stringify(schedule));
+  // Converte o valor do select para booleano
+    const availableOutsideSchedule = formData.get('availableOutsideSchedule') === 'true';
+    formData.set('availableOutsideSchedule', JSON.stringify(availableOutsideSchedule));
+
+    formData.set('specialties', JSON.stringify(specialties));
 
     createService(state, formData);
   };
@@ -208,20 +217,6 @@ export default function Form({ ServiceForm }: { ServiceForm: ServiceForm[] }) {
   return (
     <form onSubmit={handleSubmit}>
       <div className="rounded-md bg-gray-50 p-4 md:p-6">
-        <div className="mb-4">
-          <label htmlFor="specialty" className="block text-sm font-medium">
-            Qual nome você daria para a especialidade desse serviço?
-          </label>
-          <input
-            id="specialty"
-            name="specialty"
-            type="text"
-            placeholder="Descreva algo como... (Refrigeração, Ar-Condicionado, Mecânica, etc)"
-            className="block w-full rounded-md border border-gray-200 py-2 px-3 text-sm"
-            required
-          />
-        </div>
-        
         <div className="mb-4">
           <label htmlFor="location" className="block text-sm font-medium">
             Qual região você estará disponível para fazer esse atendimento?
@@ -271,12 +266,12 @@ export default function Form({ ServiceForm }: { ServiceForm: ServiceForm[] }) {
         </div>
 
         <div className="mb-4">
-          <label htmlFor="acceptScheduling" className="block text-sm font-medium">
+          <label htmlFor="availableOutsideSchedule" className="block text-sm font-medium">
             Você aceitará agendar serviços?
           </label>
           <select
-            id="acceptScheduling"
-            name="acceptScheduling"
+            id="availableOutsideSchedule"
+            name="availableOutsideSchedule"
             className="block w-full rounded-md border border-gray-200 py-2 px-3 text-sm"
             required
             defaultValue=""
@@ -287,6 +282,20 @@ export default function Form({ ServiceForm }: { ServiceForm: ServiceForm[] }) {
             <option value="true">Sim</option>
             <option value="false">Não</option>
           </select>
+        </div>
+
+        <div className="mb-4">
+          <label htmlFor="specialty" className="block text-sm font-medium">
+            Qual nome você daria para a especialidade desse serviço?
+          </label>
+          <input
+            id="specialty"
+            name="specialty"
+            type="text"
+            placeholder="Descreva algo como... (Refrigeração, Ar-Condicionado, Mecânica, etc)"
+            className="block w-full rounded-md border border-gray-200 py-2 px-3 text-sm"
+            required
+          />
         </div>
 
         <ServiceList
