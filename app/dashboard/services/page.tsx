@@ -1,6 +1,6 @@
-import Pagination from '@/app/ui/invoices/pagination';
+import Pagination from '@/app/ui/services/pagination';
 import Search from '@/app/ui/search';
-import Table from '@/app/ui/invoices/table';
+import Table from '@/app/ui/services/table';
 import { CreateServices } from '@/app/ui/services/buttons';
 
 import { Suspense } from 'react';
