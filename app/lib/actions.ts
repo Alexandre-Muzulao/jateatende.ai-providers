@@ -4,9 +4,8 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import axios from "axios";
-import { signIn } from "@/auth";
+import { signIn, auth } from "@/auth";
 import { AuthError } from "next-auth";
-import { stringify } from "querystring";
 
 const axiosInstance = axios.create({
   baseURL: `${process.env.HEGEMON_URL}`,

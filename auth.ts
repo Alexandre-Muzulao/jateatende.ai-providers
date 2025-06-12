@@ -1,30 +1,36 @@
-import NextAuth from "next-auth";
+import NextAuth, { DefaultSession, User } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { authConfig } from "./auth.config";
 import { z } from "zod";
-import type { User as BaseUser } from "@/app/lib/definitions";
 import axios from "axios";
+import { JWT } from "next-auth";
 
-interface User extends Omit<BaseUser, "token"> {
-  role?: string; // Add the 'role' property to the User type
-  phone?: string; // Add the 'phone' property to the User type
-  token: string; // Ensure the 'token' property is always a string
-}
+// import { AdapterUser } from "@auth/core/adapters";
+// import { User } from "@auth/core/types";
 
 declare module "next-auth" {
-  // interface Session {
-  //   user: User;
-  //   accessToken?: string;
-  // }
-  // interface JWT {
-  //   id?: string;
-  //   name?: string;
-  //   email?: string;
-  //   phone?: string;
-  //   role?: string;
-  //   accessToken?: string;
-  // }
-  // interface AdapterUser extends User {}
+  export interface User {
+    id?: string;
+    name?: string | null;
+    email?: string | null;
+    phone?: string | null;
+    role?: string | null;
+    token?: string | null; // Adiciona o token ao User
+  }
+
+  export interface Session {
+    user: User & DefaultSession["user"];
+    accessToken?: string;
+  }
+
+  export interface JWT {
+    id?: string;
+    name?: string;
+    email?: string;
+    phone?: string;
+    role?: string;
+    accessToken?: string;
+  }
 }
 
 const axiosInstance = axios.create({
@@ -39,15 +45,11 @@ async function getUser(
   token: string
 ): Promise<User | undefined> {
   try {
-    console.log("Fetching user data...", userId, token);
-
     const response = await axiosInstance.get("/auth/user-data", {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     });
-
-    console.log("/auth/user-data: ", response.data);
 
     return response.data;
   } catch (error: any) {
@@ -111,18 +113,16 @@ export const { auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
-    // async jwt(data) {
-    //   if (data.user) {
-    //     token.id = data.user.id;
-    //     token.name = data.user.name;
-    //     token.email = data.user.email;
-    //     token.phone = data.user.phone;
-    //     token.role = data.user.role;
-    //     token.accessToken = data.user.token;
-    //   }
-    //   return token;
-    // },
-    async session({ session, token }: { session: any; token: any }) {
+    async jwt({ token, user }) {
+      if (user && user.token) {
+        token.accessToken = user.token; // Salva o JWT como accessToken
+      }
+      return {
+        ...token,
+        ...user,
+      };
+    },
+    async session({ session, token }) {
       if (token) {
         session.user = {
           id: token.id,
@@ -130,8 +130,9 @@ export const { auth, signIn, signOut } = NextAuth({
           email: token.email,
           phone: token.phone,
           role: token.role,
-        };
-        session.accessToken = token.accessToken;
+        } as any;
+
+        session.accessToken = (token as JWT).accessToken;
       }
       return session;
     },
