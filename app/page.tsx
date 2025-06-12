@@ -23,12 +23,9 @@ export default function Page() {
       </div>
       <div className="container mx-auto relative">
         <div className='max-w-[400px] mx-auto md:mx-0 space-y-2.5 p-4 md:mt-32'>
-          <Suspense>
             <LoginForm />
-          </Suspense>
         </div>
       </div>
-
     </main>
   );
 }
