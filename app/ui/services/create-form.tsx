@@ -4,7 +4,7 @@ import { CustomerField } from '@/app/lib/definitions';
 import Link from 'next/link';
 
 import { Button } from '@/app/ui/button';
-import { savePortfolio, State } from '@/app/lib/actions';
+import { savePortfolio, PortfolioState } from '@/app/lib/actions';
 import { useActionState } from 'react';
 import { useState } from 'react';
 import { InformationCircleIcon } from '@heroicons/react/24/outline';
@@ -16,6 +16,7 @@ interface Detail {
 
 function DynamicDetailList({
   details,
+  sectionName,
   onAdd,
   onChange,
   onRemove,
@@ -23,7 +24,8 @@ function DynamicDetailList({
   detailPlaceholder,
   tooltip,
 }: {
-  details: Detail[];
+    details: Detail[];
+  sectionName: string;
   onAdd: () => void;
   onChange: (index: number, field: keyof Detail, value: string) => void;
   onRemove: (index: number) => void;
@@ -43,6 +45,7 @@ function DynamicDetailList({
           <div className="mb-2">
             <input
               type="text"
+              name={`${sectionName}.title[]`}
               placeholder={titlePlaceholder}
               value={detail.title}
               onChange={(e) => onChange(index, 'title', e.target.value)}
@@ -53,6 +56,7 @@ function DynamicDetailList({
           {/* Detail and Button in the Same Line */}
           <div className="flex items-center gap-4">
             <textarea
+              name={`${sectionName}.detail[]`}
               placeholder={detailPlaceholder}
               value={detail.detail}
               onChange={(e) => onChange(index, 'detail', e.target.value)}
@@ -75,7 +79,7 @@ function DynamicDetailList({
 }
 
 export default function ServiceForm({ customers }: { customers: CustomerField[] }) {
-  const initialState: State = { message: null, errors: {} };
+  const initialState: PortfolioState = { message: '' };
   const [state, formAction] = useActionState(savePortfolio, initialState);
   const [serviceDetails, setServiceDetails] = useState<Detail[]>([{ title: '', detail: '' }]);
   const [problemDetails, setProblemDetails] = useState<Detail[]>([{ title: '', detail: '' }]);
@@ -105,7 +109,7 @@ export default function ServiceForm({ customers }: { customers: CustomerField[] 
   };
 
   return (
-    <form  >
+    <form  action={formAction} >
       <div className="rounded-md bg-gray-50 p-4 md:p-6">
         {/* Service Name */}
         <div className="mb-4">
@@ -141,6 +145,7 @@ export default function ServiceForm({ customers }: { customers: CustomerField[] 
         {/* Service Details */}
         <DynamicDetailList
           details={serviceDetails}
+          sectionName="services"
           onAdd={() => handleAddDetail(setServiceDetails)}
           onChange={(index, field, value) => handleDetailChange(setServiceDetails, index, field, value)}
           onRemove={(index) => handleRemoveDetail(setServiceDetails, index)}
@@ -152,6 +157,7 @@ export default function ServiceForm({ customers }: { customers: CustomerField[] 
         {/* Problem Details */}
         <DynamicDetailList
           details={problemDetails}
+          sectionName="problems"
           onAdd={() => handleAddDetail(setProblemDetails)}
           onChange={(index, field, value) => handleDetailChange(setProblemDetails, index, field, value)}
           onRemove={(index) => handleRemoveDetail(setProblemDetails, index)}
