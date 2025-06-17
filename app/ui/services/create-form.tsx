@@ -2,14 +2,9 @@
 
 import { CustomerField } from '@/app/lib/definitions';
 import Link from 'next/link';
-import {
-  CheckIcon,
-  ClockIcon,
-  CurrencyDollarIcon,
-  UserCircleIcon,
-} from '@heroicons/react/24/outline';
+
 import { Button } from '@/app/ui/button';
-import { createInvoice, State } from '@/app/lib/actions';
+import { savePortfolio, State } from '@/app/lib/actions';
 import { useActionState } from 'react';
 import { useState } from 'react';
 import { InformationCircleIcon } from '@heroicons/react/24/outline';
@@ -79,9 +74,9 @@ function DynamicDetailList({
   );
 }
 
-export default function Form({ customers }: { customers: CustomerField[] }) {
+export default function ServiceForm({ customers }: { customers: CustomerField[] }) {
   const initialState: State = { message: null, errors: {} };
-  const [state, formAction] = useActionState(createInvoice, initialState);
+  const [state, formAction] = useActionState(savePortfolio, initialState);
   const [serviceDetails, setServiceDetails] = useState<Detail[]>([{ title: '', detail: '' }]);
   const [problemDetails, setProblemDetails] = useState<Detail[]>([{ title: '', detail: '' }]);
 
@@ -110,7 +105,7 @@ export default function Form({ customers }: { customers: CustomerField[] }) {
   };
 
   return (
-    <form action={formAction}>
+    <form  >
       <div className="rounded-md bg-gray-50 p-4 md:p-6">
         {/* Service Name */}
         <div className="mb-4">
