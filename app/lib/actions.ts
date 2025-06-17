@@ -23,10 +23,7 @@ export type State = {
   message?: string | null;
 };
 
-export async function savePortfolio(
-  prevState: string | any | undefined,
-  formData: FormData
-) {
+export async function savePortfolio(prevState: State, formData: FormData) {
   console.log("Saving portfolio with formData:", formData);
 }
 export async function authenticate(
