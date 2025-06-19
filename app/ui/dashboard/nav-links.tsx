@@ -5,6 +5,7 @@ import {
   HomeIcon,
   DocumentDuplicateIcon,
   WrenchScrewdriverIcon,
+  WrenchIcon,
   AdjustmentsHorizontalIcon
 } from '@heroicons/react/24/outline';
 import Link from 'next/link';
@@ -14,11 +15,12 @@ import clsx from 'clsx';
 // Map of links to display in the side navigation.
 // Depending on the size of the application, this would be stored in a database.
 const links = [
-  { name: 'Home', href: '/dashboard', icon: HomeIcon },
-  { name: 'Perfil', href: '/dashboard/perfil', icon: AdjustmentsHorizontalIcon },
-  { name: 'Serviços', href: '/dashboard/services', icon: WrenchScrewdriverIcon },
-  { name: 'Clientes', href: '/dashboard/customers', icon: UserGroupIcon },
-  { name: 'Invoices', href: '/dashboard/invoices', icon: DocumentDuplicateIcon },
+  { name: 'Home', href: '/dashboard', icon: HomeIcon, Tooltip: 'Home' },
+  { name: 'Meu Perfil', href: '/dashboard/perfil', icon: AdjustmentsHorizontalIcon, Tooltip: 'Perfil' },
+  { name: 'Serviços', href: '/dashboard/services', icon: WrenchScrewdriverIcon, Tooltip: 'Todos os serviços' },
+  { name: 'Atendimentos', href: '/dashboard/service', icon: WrenchIcon, Tooltip: 'Registro dos atendimentos' },
+  { name: 'Clientes', href: '/dashboard/customers', icon: UserGroupIcon, Tooltip: 'Clientes' },
+  { name: 'Invoices', href: '/dashboard/invoices', icon: DocumentDuplicateIcon, Tooltip: 'Invoices' },
 ];
 
 export default function NavLinks() {
@@ -31,6 +33,7 @@ export default function NavLinks() {
           <Link
             key={link.name}
             href={link.href}
+            title={link.Tooltip}
             className={clsx(
               'flex h-[48px] grow items-center justify-center gap-2 rounded-md bg-gray-50 p-3 text-sm font-medium hover:bg-sky-100 hover:text-blue-600 md:flex-none md:justify-start md:p-2 md:px-3',
               {
