@@ -20,6 +20,7 @@ export async function fetchRevenue() {
     // await new Promise((resolve) => setTimeout(resolve, 3000));
 
     const data = await sql<Revenue[]>`SELECT * FROM revenue`;
+    console.log('Revenue data fetched:', data);
 
     // console.log('Data fetch completed after 3 seconds.');
 
@@ -29,6 +30,37 @@ export async function fetchRevenue() {
     throw new Error('Failed to fetch revenue data.');
   }
 }
+
+
+export async function fetchOrderedRevenue() {
+  try {
+    const data = await sql<Revenue[]>`
+      SELECT *
+      FROM revenue
+      ORDER BY 
+        CASE month
+          WHEN 'Jan' THEN 1
+          WHEN 'Feb' THEN 2
+          WHEN 'Mar' THEN 3
+          WHEN 'Apr' THEN 4
+          WHEN 'May' THEN 5
+          WHEN 'Jun' THEN 6
+          WHEN 'Jul' THEN 7
+          WHEN 'Aug' THEN 8
+          WHEN 'Sep' THEN 9
+          WHEN 'Oct' THEN 10
+          WHEN 'Nov' THEN 11
+          WHEN 'Dec' THEN 12
+        END;
+    `;
+
+    return data;
+  } catch (error) {
+    console.error('Database Error:', error);
+    throw new Error('Failed to fetch ordered revenue data.');
+  }
+}
+
 
 export async function fetchLatestInvoices() {
   try {
