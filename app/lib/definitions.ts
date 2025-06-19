@@ -88,3 +88,72 @@ export type InvoiceForm = {
   amount: number;
   status: 'pending' | 'paid';
 };
+
+export type Service = {
+  service: string;
+  detail: string;
+};
+
+export type Problem = {
+  problem: string;    
+  detail: string;
+};
+
+export type ServiceFormField = {
+  id: string;
+  name: string;
+};
+export type ServiceField = { 
+  id: string;
+  name: string;
+};
+
+export type ServiceForm = {
+  id: string;
+  specialty: string;
+  serviceDescription: string;
+  serviceDetails: string;
+  problemDetails: string;
+};
+
+export type ServiceFormState = {
+  errors?: {
+    specialty?: string[];
+    serviceDescription?: string[];
+    serviceDetails?: string[];
+    problemDetails?: string[];
+  };
+  message?: string | null;
+};
+
+export type ServiceFormData = {
+  specialty: string;
+  services: Service[];
+  solvedProblems: Problem[];
+};
+
+export type ServiceFormSchema = {
+  specialty: string;
+  serviceDescription: string;
+  serviceDetails: Service[];
+  problemDetails: Problem[];
+};
+export type ServiceFormSchemaErrors = {
+  specialty?: string[];
+  serviceDescription?: string[];
+  serviceDetails?: string[];
+  problemDetails?: string[];
+};
+
+export type ServiceFormSchemaState = {
+  errors?: ServiceFormSchemaErrors;
+  message?: string | null;
+};
+
+export type ServiceFormSchemaData = {
+  specialty: string;
+  serviceDescription: string;
+  serviceDetails: Service[];
+  problemDetails: Problem[];
+};  
+

@@ -8,6 +8,7 @@ import { signIn} from '@/auth';
 import { AuthError } from 'next-auth';
 import { stringify } from 'querystring';
 import axios from 'axios';
+import { saveTokenToSession } from './session';
 
 const axiosInstance = axios.create({
   baseURL: `${process.env.HEGEMON_URL}`,
@@ -128,9 +129,6 @@ export async function authenticate(
   formData: FormData,
 ) {
   try {
-    console.log('FormData:', formData); // Log the FormData object to see its contents
-    // dar get no user? 
-
     const UsersignIn = await signIn('credentials', formData);
     console.log('UsersignIn:', UsersignIn); // Log the response from signIn
   } catch (error) {
@@ -161,6 +159,7 @@ export async function registerUser(
 
   try {
     const response = await axiosInstance.post('/auth/register', data); // Use the axios instance to make the request
+    console.log('Response:', response); // Log the response data 
     
     if (response.status === 200) {
       const { token, user } = response.data; // Extrai o token e o usuário do response
@@ -172,8 +171,9 @@ export async function registerUser(
       authFormData.append('userId', user._id as string);
       authFormData.append('token', token as string);
 
-      localStorage.setItem('authToken', token); // Armazena o token no localStorage
+      // localStorage.setItem('authToken', token); // Armazena o token no localStorage
       // Redireciona para o dashboard
+      saveTokenToSession('authToken', response.data.token); // Save the token to session storage
       redirect('/dashboard');
     } else {
       return {
@@ -181,6 +181,7 @@ export async function registerUser(
       };
     }
   } catch (error: any) {
+
     console.log('Response:', error); // Log the response data 
 
     return {

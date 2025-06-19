@@ -12,6 +12,7 @@ interface User extends Omit<BaseUser, 'token'> {
 }
 
 declare module 'next-auth' {
+
   interface Session {
     user: User;
     accessToken?: string;
@@ -28,8 +29,8 @@ declare module 'next-auth' {
 
   interface AdapterUser extends User {}
 }
+
 import bcrypt from 'bcryptjs';
-import postgres from 'postgres';
 import axios from 'axios';
 
 const axiosInstance = axios.create({
@@ -41,12 +42,9 @@ const axiosInstance = axios.create({
  
 async function authUser(email: string, password: string): Promise<{ user: User; token: string } | undefined> {
   try {
-    console.log('Fetching user data...', email, password);
     const data = { email, password };
 
     const response = await axiosInstance.post('/auth', data);
-
-    console.log('user-data: ', response.data);
 
     return response.data;
   } catch (error: any) {
@@ -63,15 +61,12 @@ async function authUser(email: string, password: string): Promise<{ user: User; 
 
 async function getUser(userId: string, token: string): Promise<User | undefined> {
   try {
-    console.log('Fetching user data...', userId, token);
 
     const response = await axiosInstance.get('/auth/user-data', {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     });
-
-    console.log('/auth/user-data: ', response.data);
 
     return response.data;
   } catch (error: any) {
@@ -113,7 +108,7 @@ export const { auth, signIn, signOut } = NextAuth({
           }
 
           const { user, token } = authResponse;
-
+          console.log('Token received:', token);  
           // Retorna o usuário autenticado com o token
           return {
             id: user.id,
@@ -132,17 +127,30 @@ export const { auth, signIn, signOut } = NextAuth({
   ],
   callbacks: {
     async jwt({ token, user }: { token: any; user?: User }) {
+
+      console.log('JWT callback:', token, user);
+
       if (user) {
-        token.id = user.id;
-        token.name = user.name;
-        token.email = user.email;
-        token.phone = user.phone;
-        token.role = user.role;
-        token.accessToken = user.token;
+        token.id = user.id || token.id;
+        token.name = user.name || token.name;
+        token.email = user.email || token.email;
+        token.phone = user.phone || token.phone;
+        token.role = user.role || token.role;
+        token.accessToken = user.token || token.accessToken;
+
+        // Salvar o token no Session Storage
+        if (typeof window !== 'undefined' && token.accessToken) {
+          sessionStorage.setItem('Token', token.accessToken);
+          console.log('Token saved to Session Storage:', token.accessToken);
+        }
       }
+
       return token;
     },
     async session({ session, token }: { session: any; token: any }) {
+
+      console.log('Session callback:', session, token);
+
       if (token) {
         session.user = {
           id: token.id,
@@ -151,9 +159,11 @@ export const { auth, signIn, signOut } = NextAuth({
           phone: token.phone,
           role: token.role,
         };
+
+        console.log('Session accessToken:', token.accessToken);
         session.accessToken = token.accessToken;
       }
       return session;
-    },
+    }
   },
 });
