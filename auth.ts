@@ -1,24 +1,26 @@
-import NextAuth from 'next-auth';
-import Credentials from 'next-auth/providers/credentials';
-import { authConfig } from './auth.config';
-import { z } from 'zod';
-import type { User as BaseUser } from '@/app/lib/definitions';
-import type { AdapterUser } from 'next-auth/adapters';
+import NextAuth, { DefaultSession, User } from "next-auth";
+import Credentials from "next-auth/providers/credentials";
+import { authConfig } from "./auth.config";
+import { z } from "zod";
+import axios from "axios";
+import { JWT } from "next-auth";
 
-interface User extends Omit<BaseUser, 'token'> {
-  role?: string; // Add the 'role' property to the User type
-  phone?: string; // Add the 'phone' property to the User type
-  token: string; // Ensure the 'token' property is always a string
-}
+declare module "next-auth" {
+  export interface User {
+    id?: string;
+    name?: string | null;
+    email?: string | null;
+    phone?: string | null;
+    role?: string | null;
+    token?: string | null; // Adiciona o token ao User
+  }
 
-declare module 'next-auth' {
-
-  interface Session {
-    user: User;
+  export interface Session {
+    user: User & DefaultSession["user"];
     accessToken?: string;
   }
 
-  interface JWT {
+  export interface JWT {
     id?: string;
     name?: string;
     email?: string;
@@ -26,58 +28,26 @@ declare module 'next-auth' {
     role?: string;
     accessToken?: string;
   }
-
-  interface AdapterUser extends User {}
 }
-
-import bcrypt from 'bcryptjs';
-import axios from 'axios';
 
 const axiosInstance = axios.create({
   baseURL: `${process.env.HEGEMON_URL}`,
   headers: {
-    'Content-Type': 'application/json'
-  }
-})
- 
-async function authUser(email: string, password: string): Promise<{ user: User; token: string } | undefined> {
+    "Content-Type": "application/json",
+  },
+});
+
+async function getUser(token: string): Promise<User> {
   try {
-    const data = { email, password };
-
-    const response = await axiosInstance.post('/auth', data);
-
-    return response.data;
-  } catch (error: any) {
-    if (error.response) {
-      console.error('Response error:', error.response.data);
-    } else if (error.request) {
-      console.error('No response received:', error.request);
-    } else {
-      console.error('Error setting up request:', error.message);
-    }
-    throw new Error('Failed to fetch user.');
-  }
-}
-
-async function getUser(userId: string, token: string): Promise<User | undefined> {
-  try {
-
-    const response = await axiosInstance.get('/auth/user-data', {
+    const { data } = await axiosInstance.get("/auth/user-data", {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     });
 
-    return response.data;
+    return data;
   } catch (error: any) {
-    if (error.response) {
-      console.error('Response error:', error.response.data);
-    } else if (error.request) {
-      console.error('No response received:', error.request);
-    } else {
-      console.error('Error setting up request:', error.message);
-    }
-    throw new Error('Failed to fetch user.');
+    throw new Error("Failed to fetch user.");
   }
 }
 
@@ -87,29 +57,33 @@ export const { auth, signIn, signOut } = NextAuth({
     Credentials({
       async authorize(credentials) {
         try {
-          const parsedCredentials = z.object({
-            email: z.string().email(),
-            password: z.string().min(6),
-          }).safeParse(credentials);
+          const parsedCredentials = z
+            .object({
+              email: z.string().email(),
+              password: z.string().min(6).max(32),
+            })
+            .safeParse(credentials);
 
           if (!parsedCredentials.success) {
-            console.error('Invalid credentials format:', parsedCredentials.error);
-            return null;
+            throw new Error(
+              "Invalid credentials format: " + parsedCredentials.error
+            );
           }
 
           const { email, password } = parsedCredentials.data;
+          const { data } = await axiosInstance.post("/auth", {
+            email,
+            password,
+          });
 
-          // Chama o método authUser para autenticar o usuário
-          const authResponse = await authUser(email, password);
-
-          if (!authResponse || !authResponse.user || !authResponse.token) {
-            console.error('Authentication failed: Invalid response from authUser.');
-            return null;
+          if (!data || !data.user || !data.token) {
+            throw new Error(
+              "Invalid response from authUser: " + JSON.stringify(data)
+            );
           }
 
-          const { user, token } = authResponse;
-          console.log('Token received:', token);  
-          // Retorna o usuário autenticado com o token
+          const { user, token } = data;
+
           return {
             id: user.id,
             name: user.name,
@@ -119,38 +93,23 @@ export const { auth, signIn, signOut } = NextAuth({
             token,
           };
         } catch (error) {
-          console.error('Error during authentication:', error);
+          console.error("Authentication error:", error);
           return null;
         }
       },
     }),
   ],
   callbacks: {
-    async jwt({ token, user }: { token: any; user?: User }) {
-
-      console.log('JWT callback:', token, user);
-
-      if (user) {
-        token.id = user.id || token.id;
-        token.name = user.name || token.name;
-        token.email = user.email || token.email;
-        token.phone = user.phone || token.phone;
-        token.role = user.role || token.role;
-        token.accessToken = user.token || token.accessToken;
-
-        // Salvar o token no Session Storage
-        if (typeof window !== 'undefined' && token.accessToken) {
-          sessionStorage.setItem('Token', token.accessToken);
-          console.log('Token saved to Session Storage:', token.accessToken);
-        }
+    async jwt({ token, user }) {
+      if (user && user.token) {
+        token.accessToken = user.token; // Salva o JWT como accessToken
       }
-
-      return token;
+      return {
+        ...token,
+        ...user,
+      };
     },
-    async session({ session, token }: { session: any; token: any }) {
-
-      console.log('Session callback:', session, token);
-
+    async session({ session, token }) {
       if (token) {
         session.user = {
           id: token.id,
@@ -158,12 +117,11 @@ export const { auth, signIn, signOut } = NextAuth({
           email: token.email,
           phone: token.phone,
           role: token.role,
-        };
+        } as any;
 
-        console.log('Session accessToken:', token.accessToken);
-        session.accessToken = token.accessToken;
+        session.accessToken = (token as JWT).accessToken;
       }
       return session;
-    }
+    },
   },
 });

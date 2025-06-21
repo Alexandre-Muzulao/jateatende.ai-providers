@@ -2,10 +2,9 @@ import { ArrowPathIcon } from '@heroicons/react/24/outline';
 import clsx from 'clsx';
 import Image from 'next/image';
 
-import { fetchLatestInvoices } from '@/app/lib/data';
 
 export default async function LatestInvoices() { // Remove props
-  const latestInvoices = await fetchLatestInvoices();
+  // const latestInvoices = await fetchLatestInvoices();
   return (
     <div className="flex w-full flex-col md:col-span-4">
       <h2 className="mb-4 text-xl md:text-2xl font-semibold text-white">
@@ -15,7 +14,7 @@ export default async function LatestInvoices() { // Remove props
         {/* NOTE: Uncomment this code in Chapter 7 */}
 
         {<div className="bg-white px-6">
-          {latestInvoices.map((invoice, i) => {
+          {/* {latestInvoices.map((invoice, i) => {
             return (
               <div
                 key={invoice.id}
@@ -50,7 +49,7 @@ export default async function LatestInvoices() { // Remove props
                 </p>
               </div>
             );
-          })}
+          })} */}
         </div>}
         <div className="flex items-center pb-2 pt-6">
           <ArrowPathIcon className="h-5 w-5 text-gray-500" />
