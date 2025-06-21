@@ -8,7 +8,7 @@ interface AcmeLogoProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   height?: number;
 }
 
-export default function AcmeLogo({ lightMode = false, width = 300, height = 300 }: AcmeLogoProps) {
+export default function AcmeLogo({ lightMode = false, width = 300, height = 400 }: AcmeLogoProps) {
   return (
     <div
       className="flex items-center justify-center"
