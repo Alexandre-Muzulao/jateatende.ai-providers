@@ -1,9 +1,7 @@
-import ServiceForm from '@/app/ui/services/create-form';
+import Form from '@/app/ui/services/create-form';
 import Breadcrumbs from '@/app/ui/services/breadcrumbs';
-import { fetchCustomers } from '@/app/lib/data';
  
 export default async function Page() {
-  const customers = await fetchCustomers();
  
   return (
     <main>
@@ -17,7 +15,7 @@ export default async function Page() {
           },
         ]}
       />
-      <ServiceForm customers={customers} />
+      <Form />
     </main>
   );
 }

@@ -2,9 +2,7 @@ import CardWrapper from '@/app/ui/dashboard/cards';
 import RevenueChart from '@/app/ui/dashboard/revenue-chart';
 import LatestInvoices from '@/app/ui/dashboard/latest-invoices';
 
-import {
-  fetchCardData,
-} from '@/app/lib/data';
+
 import { Suspense } from 'react';
 import {
   RevenueChartSkeleton,
@@ -16,12 +14,7 @@ import {
 export default async function Page() {
 
 
-  const {
-    numberOfInvoices,
-    numberOfCustomers,
-    totalPaidInvoices,
-    totalPendingInvoices,
-  } = await fetchCardData();
+
   return (
     <main>
       <h1 className="mb-4 text-xl md:text-2xl font-semibold text-white">

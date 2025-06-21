@@ -5,9 +5,6 @@ import { z } from "zod";
 import axios from "axios";
 import { JWT } from "next-auth";
 
-// import { AdapterUser } from "@auth/core/adapters";
-// import { User } from "@auth/core/types";
-
 declare module "next-auth" {
   export interface User {
     id?: string;
@@ -40,26 +37,16 @@ const axiosInstance = axios.create({
   },
 });
 
-async function getUser(
-  userId: string,
-  token: string
-): Promise<User | undefined> {
+async function getUser(token: string): Promise<User> {
   try {
-    const response = await axiosInstance.get("/auth/user-data", {
+    const { data } = await axiosInstance.get("/auth/user-data", {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     });
 
-    return response.data;
+    return data;
   } catch (error: any) {
-    if (error.response) {
-      console.error("Response error:", error.response.data);
-    } else if (error.request) {
-      console.error("No response received:", error.request);
-    } else {
-      console.error("Error setting up request:", error.message);
-    }
     throw new Error("Failed to fetch user.");
   }
 }
