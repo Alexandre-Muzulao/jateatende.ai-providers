@@ -122,7 +122,7 @@ function ProblemList({
   );
 }
 
-export default function Form() {
+export default function Form({ ServiceForm }: { ServiceForm: ServiceForm[] }) {
   const initialState: State = { message: null, errors: { location: [], schedule: [], availableOutsideSchedule: [], specialties: [] } };
   const [state, formAction] = useActionState(createService, initialState);
   const [services, setServices] = useState<Service[]>([{ service: '', detail: '' }]);

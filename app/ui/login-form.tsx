@@ -1,28 +1,31 @@
-"use client";
+'use client';
+
 
 import {
   AtSymbolIcon,
   KeyIcon,
   ExclamationCircleIcon,
-} from "@heroicons/react/24/outline";
-import { ArrowRightIcon } from "@heroicons/react/20/solid";
-import { Button } from "./button";
-import { useActionState } from "react";
-import { authenticate } from "@/app/lib/actions";
-import { useSearchParams } from "next/navigation";
+} from '@heroicons/react/24/outline';
+import { ArrowRightIcon } from '@heroicons/react/20/solid';
+import { Button } from './button';
+import { useActionState } from 'react';
+import { authenticate } from '@/app/lib/actions';
+import { useSearchParams } from 'next/navigation';
 
 export default function LoginForm() {
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
+  const callbackUrl = searchParams.get('callbackUrl') || '/dashboard';
   const [errorMessage, formAction, isPending] = useActionState(
     authenticate,
-    undefined
+    undefined,
   );
 
   return (
     <form action={formAction} className="space-y-3">
       <div className="flex-1 rounded-lg bg-gray-50 px-6 pb-4 pt-8">
-        <h1 className="mb-3 text-2xl">Acesse sua conta</h1>
+        <h1 className="mb-3 text-2xl">
+          Acesse sua conta
+        </h1>
         <div className="w-full">
           <div>
             <label
@@ -65,12 +68,9 @@ export default function LoginForm() {
           </div>
         </div>
         <input type="hidden" name="redirectTo" value={callbackUrl} />
-        <Button
-          type="submit"
-          className="mt-4 w-full text-center bg-primary hover:bg-warning active:bg-warning"
-          aria-disabled={isPending}
-        >
-          <b className="mx-auto">Login</b>
+        <Button className="mt-4 w-full text-center bg-primary hover:bg-warning active:bg-warning" aria-disabled={isPending}>
+
+          <b className='mx-auto'>Login</b>
 
           <ArrowRightIcon className="h-5 w-5 text-gray-50" />
         </Button>
