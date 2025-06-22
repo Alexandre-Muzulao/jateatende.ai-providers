@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import { ServiceForm } from '@/app/lib/definitions';
-import { useState } from 'react';
-import { Button } from '@/app/ui/button';
-import { createService, State } from '@/app/lib/clasmos';
-import { useActionState } from 'react';
-import Link from 'next/link';
-import { InformationCircleIcon } from '@heroicons/react/24/outline';
+import { ServiceForm } from "@/app/lib/definitions";
+import { useState } from "react";
+import { Button } from "@/app/ui/button";
+import { createService, State } from "@/app/lib/clasmos";
+import { useActionState } from "react";
+import Link from "next/link";
+import { InformationCircleIcon } from "@heroicons/react/24/outline";
 
 interface Service {
   service: string;
@@ -32,8 +32,13 @@ function ServiceList({
   return (
     <div className="mb-6">
       <div className="flex items-center gap-2">
-        <label className="text-sm font-medium">Adicione os serviços que você presta</label>
-        <InformationCircleIcon className="h-5 w-5 text-gray-500" title="Adicione os serviços que você presta" />
+        <label className="text-sm font-medium">
+          Adicione os serviços que você presta
+        </label>
+        <InformationCircleIcon
+          className="h-5 w-5 text-gray-500"
+          title="Adicione os serviços que você presta"
+        />
       </div>
       {services.map((service, index) => (
         <div key={index} className="mb-4">
@@ -42,7 +47,7 @@ function ServiceList({
               type="text"
               placeholder="Serviço (ex: Instalação de ar-condicionado)"
               value={service.service}
-              onChange={(e) => onChange(index, 'service', e.target.value)}
+              onChange={(e) => onChange(index, "service", e.target.value)}
               className="w-full rounded-md border border-gray-200 py-2 px-3 text-sm"
               required
             />
@@ -51,7 +56,7 @@ function ServiceList({
             <textarea
               placeholder="Detalhes do serviço"
               value={service.detail}
-              onChange={(e) => onChange(index, 'detail', e.target.value)}
+              onChange={(e) => onChange(index, "detail", e.target.value)}
               className="flex-1 rounded-md border border-gray-200 py-2 px-3 text-sm"
               rows={2}
               maxLength={1028}
@@ -84,8 +89,13 @@ function ProblemList({
   return (
     <div className="mb-6">
       <div className="flex items-center gap-2">
-        <label className="text-sm font-medium">Adicione os problemas que você resolve</label>
-        <InformationCircleIcon className="h-5 w-5 text-gray-500" title="Adicione os problemas que você resolve" />
+        <label className="text-sm font-medium">
+          Adicione os problemas que você resolve
+        </label>
+        <InformationCircleIcon
+          className="h-5 w-5 text-gray-500"
+          title="Adicione os problemas que você resolve"
+        />
       </div>
       {problems.map((problem, index) => (
         <div key={index} className="mb-4">
@@ -93,8 +103,8 @@ function ProblemList({
             <input
               type="text"
               placeholder="Problema resolvido (ex: Ar-condicionado não gela)"
-              value={problem.problem || ''} // Garante que o valor seja sempre uma string
-              onChange={(e) => onChange(index, 'problem', e.target.value)}
+              value={problem.problem || ""} // Garante que o valor seja sempre uma string
+              onChange={(e) => onChange(index, "problem", e.target.value)}
               className="w-full rounded-md border border-gray-200 py-2 px-3 text-sm"
               required
             />
@@ -102,8 +112,8 @@ function ProblemList({
           <div className="flex items-center gap-4">
             <textarea
               placeholder="Detalhes do problema resolvido"
-              value={problem.detail || ''} // Garante que o valor seja sempre uma string
-              onChange={(e) => onChange(index, 'detail', e.target.value)}
+              value={problem.detail || ""} // Garante que o valor seja sempre uma string
+              onChange={(e) => onChange(index, "detail", e.target.value)}
               className="flex-1 rounded-md border border-gray-200 py-2 px-3 text-sm"
               rows={2}
               maxLength={1028}
@@ -122,14 +132,33 @@ function ProblemList({
   );
 }
 
-export default function Form({ ServiceForm }: { ServiceForm: ServiceForm[] }) {
-  const initialState: State = { message: null, errors: { location: [], schedule: [], availableOutsideSchedule: [], specialties: [] } };
+export default function Form() {
+  const initialState: State = {
+    errors: {},
+    message: "",
+    location: "",
+    schedule: [],
+    availableOutsideSchedule: false,
+    specialties: [
+      {
+        specialty: "",
+        services: [{ service: "", detail: "" }],
+        solvedProblems: [{ problem: "", detail: "" }],
+      },
+    ],
+  };
   const [state, formAction] = useActionState(createService, initialState);
-  const [services, setServices] = useState<Service[]>([{ service: '', detail: '' }]);
-  const [solvedProblems, setSolvedProblems] = useState<Problem[]>([{ problem: '', detail: '' }]);
+  const [services, setServices] = useState<Service[]>([
+    { service: "", detail: "" },
+  ]);
+  const [solvedProblems, setSolvedProblems] = useState<Problem[]>([
+    { problem: "", detail: "" },
+  ]);
 
-  const handleAddDetail = (setDetails: React.Dispatch<React.SetStateAction<any[]>>) => {
-    setDetails((prev) => [...prev, { service: '', detail: '' }]);
+  const handleAddDetail = (
+    setDetails: React.Dispatch<React.SetStateAction<any[]>>
+  ) => {
+    setDetails((prev) => [...prev, { service: "", detail: "" }]);
   };
 
   const handleDetailChange = (
@@ -145,15 +174,22 @@ export default function Form({ ServiceForm }: { ServiceForm: ServiceForm[] }) {
     });
   };
 
-  const handleRemoveDetail = (setDetails: React.Dispatch<React.SetStateAction<any[]>>, index: number) => {
+  const handleRemoveDetail = (
+    setDetails: React.Dispatch<React.SetStateAction<any[]>>,
+    index: number
+  ) => {
     setDetails((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleAddProblem = () => {
-    setSolvedProblems((prev) => [...prev, { problem: '', detail: '' }]); // Adiciona um novo problema vazio
+    setSolvedProblems((prev) => [...prev, { problem: "", detail: "" }]); // Adiciona um novo problema vazio
   };
 
-  const handleProblemChange = (index: number, field: keyof Problem, value: string) => {
+  const handleProblemChange = (
+    index: number,
+    field: keyof Problem,
+    value: string
+  ) => {
     setSolvedProblems((prev) => {
       const updatedProblems = [...prev];
       updatedProblems[index][field] = value; // Atualiza apenas os campos `problem` e `detail`
@@ -170,13 +206,13 @@ export default function Form({ ServiceForm }: { ServiceForm: ServiceForm[] }) {
     const formData = new FormData(event.currentTarget);
 
     const daysOfWeek = [
-      'SUNDAY',
-      'MONDAY',
-      'TUESDAY',
-      'WEDNESDAY',
-      'THURSDAY',
-      'FRIDAY',
-      'SATURDAY',
+      "SUNDAY",
+      "MONDAY",
+      "TUESDAY",
+      "WEDNESDAY",
+      "THURSDAY",
+      "FRIDAY",
+      "SATURDAY",
     ];
 
     const schedule = daysOfWeek
@@ -187,29 +223,38 @@ export default function Form({ ServiceForm }: { ServiceForm: ServiceForm[] }) {
         finalHour: formData.get(`availability[${index}][end]`) as string,
       }))
       .filter(
-        (item) =>
-          item.initialHour && item.finalHour // Filtra apenas os dias com horários preenchidos
+        (item) => item.initialHour && item.finalHour // Filtra apenas os dias com horários preenchidos
       );
 
     const specialties = [
       {
-        specialty: formData.get('specialty') as string,
+        specialty: formData.get("specialty") as string,
         services: services
-          .filter((service) => service.service.trim() !== '' && service.detail.trim() !== '')
+          .filter(
+            (service) =>
+              service.service.trim() !== "" && service.detail.trim() !== ""
+          )
           .map(({ service, detail }) => ({ service, detail })),
         solvedProblems: solvedProblems
-          .filter((problem) => problem.problem.trim() !== '' && problem.detail.trim() !== '')
+          .filter(
+            (problem) =>
+              problem.problem.trim() !== "" && problem.detail.trim() !== ""
+          )
           .map(({ problem, detail }) => ({ problem, detail })),
       },
     ];
 
-    formData.set('location', formData.get('location') as string);
-    formData.set('schedule', JSON.stringify(schedule));
-  // Converte o valor do select para booleano
-    const availableOutsideSchedule = formData.get('availableOutsideSchedule') === 'true';
-    formData.set('availableOutsideSchedule', JSON.stringify(availableOutsideSchedule));
+    formData.set("location", formData.get("location") as string);
+    formData.set("schedule", JSON.stringify(schedule));
+    // Converte o valor do select para booleano
+    const availableOutsideSchedule =
+      formData.get("availableOutsideSchedule") === "true";
+    formData.set(
+      "availableOutsideSchedule",
+      JSON.stringify(availableOutsideSchedule)
+    );
 
-    formData.set('specialties', JSON.stringify(specialties));
+    formData.set("specialties", JSON.stringify(specialties));
 
     createService(state, formData);
   };
@@ -233,40 +278,44 @@ export default function Form({ ServiceForm }: { ServiceForm: ServiceForm[] }) {
 
         <div className="mb-4">
           <label className="block text-sm font-medium mb-2">
-            Quais dias e horários você estará disponível para fazer esse atendimento?
+            Quais dias e horários você estará disponível para fazer esse
+            atendimento?
           </label>
           <div className="space-y-2">
             {[
-              'Domingo',
-              'Segunda-feira',
-              'Terça-feira',
-              'Quarta-feira',
-              'Quinta-feira',
-              'Sexta-feira',
-              'Sábado',
+              "Domingo",
+              "Segunda-feira",
+              "Terça-feira",
+              "Quarta-feira",
+              "Quinta-feira",
+              "Sexta-feira",
+              "Sábado",
             ].map((day, idx) => (
               <div key={day} className="flex items-center gap-4">
-          <label className="w-32 text-sm">{day}</label>
-          <input
-            type="time"
-            name={`availability[${idx}][start]`}
-            className="rounded-md border border-gray-200 py-1 px-2 text-sm"
-            required={false}
-          />
-          <span className="text-xs text-gray-500">até</span>
-          <input
-            type="time"
-            name={`availability[${idx}][end]`}
-            className="rounded-md border border-gray-200 py-1 px-2 text-sm"
-            required={false}
-          />
+                <label className="w-32 text-sm">{day}</label>
+                <input
+                  type="time"
+                  name={`availability[${idx}][start]`}
+                  className="rounded-md border border-gray-200 py-1 px-2 text-sm"
+                  required={false}
+                />
+                <span className="text-xs text-gray-500">até</span>
+                <input
+                  type="time"
+                  name={`availability[${idx}][end]`}
+                  className="rounded-md border border-gray-200 py-1 px-2 text-sm"
+                  required={false}
+                />
               </div>
             ))}
           </div>
         </div>
 
         <div className="mb-4">
-          <label htmlFor="availableOutsideSchedule" className="block text-sm font-medium">
+          <label
+            htmlFor="availableOutsideSchedule"
+            className="block text-sm font-medium"
+          >
             Você aceitará agendar serviços?
           </label>
           <select
@@ -301,7 +350,9 @@ export default function Form({ ServiceForm }: { ServiceForm: ServiceForm[] }) {
         <ServiceList
           services={services}
           onAdd={() => handleAddDetail(setServices)}
-          onChange={(index, field, value) => handleDetailChange(setServices, index, field, value)}
+          onChange={(index, field, value) =>
+            handleDetailChange(setServices, index, field, value)
+          }
           onRemove={(index) => handleRemoveDetail(setServices, index)}
         />
 
