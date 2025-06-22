@@ -17,31 +17,6 @@ async function httpClient() {
   });
 }
 
-export type State = {
-  errors?: {
-    location?: string[];
-    schedule?: {
-      initialWeekDay?: string;
-      finalWeekDay?: string;
-      initialHour?: string;
-      finalHour?: string;
-    }[];
-    availableOutsideSchedule?: string[];
-    specialties?: {
-      specialty?: string;
-      services?: {
-        service?: string;
-        detail?: string;
-      }[];
-      solvedProblems?: {
-        problem?: string;
-        detail?: string;
-      }[];
-    }[];
-  };
-  message?: string | null;
-};
-
 // Define o esquema de validação para os campos do formulário
 const CreateServiceSchema = z.object({
   location: z
@@ -65,7 +40,7 @@ const CreateServiceSchema = z.object({
       })
     )
     .min(1, { message: "Adicione pelo menos um horário de disponibilidade." }),
-  availableOutsideSchedule: z.enum(["true", "false"], {
+  availableOutsideSchedule: z.boolean({
     message: "Selecione uma opção válida para agendamento.",
   }),
   specialties: z
@@ -105,6 +80,11 @@ const CreateServiceSchema = z.object({
     .min(1, { message: "Adicione pelo menos uma especialidade." }),
 });
 
+export type State = z.infer<typeof CreateServiceSchema> & {
+  errors: Record<string, string[]>;
+  message: string;
+};
+
 export async function createService(prevState: State, formData: FormData) {
   const data = {
     location: formData.get("location") as string,
@@ -119,6 +99,11 @@ export async function createService(prevState: State, formData: FormData) {
     return {
       ...prevState,
       errors: validatedFields.error.flatten().fieldErrors,
+      message: "Erro de validação.",
+      location: prevState.location,
+      schedule: prevState.schedule,
+      availableOutsideSchedule: prevState.availableOutsideSchedule,
+      specialties: prevState.specialties,
     };
   }
 
@@ -130,17 +115,29 @@ export async function createService(prevState: State, formData: FormData) {
     );
 
     if (response.status === 201) {
-      redirect("/dashboard/services");
+      redirect("/dashboard/portifolios");
     } else {
       return {
-        message: response.data.message || "Erro ao criar o serviço.",
+        ...prevState,
+        errors: {},
+        message: response.data?.message || "Erro ao criar o serviço.",
+        location: prevState.location,
+        schedule: prevState.schedule,
+        availableOutsideSchedule: prevState.availableOutsideSchedule,
+        specialties: prevState.specialties,
       };
     }
   } catch (error: any) {
     console.error("Error creating service:", error);
     return {
+      ...prevState,
+      errors: {},
       message:
         error.response?.data?.message || "Erro ao conectar com o servidor.",
+      location: prevState.location,
+      schedule: prevState.schedule,
+      availableOutsideSchedule: prevState.availableOutsideSchedule,
+      specialties: prevState.specialties,
     };
   }
 }

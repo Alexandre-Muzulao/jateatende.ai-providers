@@ -1,5 +1,5 @@
 import Image from 'next/image';
-import { UpdateInvoice, DeleteInvoice } from '@/app/ui/invoices/buttons';
+import { UpdateInvoice, DeleteInvoice, SetupInvoice } from '@/app/ui/invoices/buttons';
 import InvoiceStatus from '@/app/ui/invoices/status';
 import { formatDateToLocal, formatCurrency } from '@/app/lib/utils';
 import { fetchFilteredInvoices } from '@/app/lib/data';
@@ -49,6 +49,7 @@ export default async function InvoicesTable({
                   <div className="flex justify-end gap-2">
                     <UpdateInvoice id={invoice.id} />
                     <DeleteInvoice id={invoice.id} />
+                    <SetupInvoice id={invoice.id} />
                   </div>
                 </div>
               </div>
@@ -58,22 +59,22 @@ export default async function InvoicesTable({
             <thead className="rounded-lg text-left text-sm font-normal">
               <tr>
                 <th scope="col" className="px-4 py-5 font-medium sm:pl-6">
-                  Cliente
+                  Serviço
                 </th>
                 <th scope="col" className="px-3 py-5 font-medium">
                   Email
                 </th>
                 <th scope="col" className="px-3 py-5 font-medium">
-                  Preço
+                  Amount
                 </th>
                 <th scope="col" className="px-3 py-5 font-medium">
-                  Data
+                  Date
                 </th>
                 <th scope="col" className="px-3 py-5 font-medium">
                   Status
                 </th>
                 <th scope="col" className="relative py-3 pl-6 pr-3">
-                  <span className="sr-only">Editar</span>
+                  <span className="sr-only">Edit</span>
                 </th>
               </tr>
             </thead>
@@ -83,7 +84,7 @@ export default async function InvoicesTable({
                   key={invoice.id}
                   className="w-full border-b py-3 text-sm last-of-type:border-none [&:first-child>td:first-child]:rounded-tl-lg [&:first-child>td:last-child]:rounded-tr-lg [&:last-child>td:first-child]:rounded-bl-lg [&:last-child>td:last-child]:rounded-br-lg"
                 >
-                  <td className="whitespace-nowrap py-3 pl-6 pr-3">
+                  {/* <td className="whitespace-nowrap py-3 pl-6 pr-3">
                     <div className="flex items-center gap-3">
                       <Image
                         src={invoice.image_url}
@@ -94,7 +95,7 @@ export default async function InvoicesTable({
                       />
                       <p>{invoice.name}</p>
                     </div>
-                  </td>
+                  </td> */}
                   <td className="whitespace-nowrap px-3 py-3">
                     {invoice.email}
                   </td>
@@ -111,6 +112,7 @@ export default async function InvoicesTable({
                     <div className="flex justify-end gap-3">
                       <UpdateInvoice id={invoice.id} />
                       <DeleteInvoice id={invoice.id} />
+                      <SetupInvoice id={invoice.id} />
                     </div>
                   </td>
                 </tr>

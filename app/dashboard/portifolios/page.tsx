@@ -1,7 +1,7 @@
-import Pagination from '@/app/ui/invoices/pagination';
+import Pagination from '@/app/ui/portifolios/pagination';
 import Search from '@/app/ui/search';
-import Table from '@/app/ui/services/table';
-import { CreateService } from '@/app/ui/services/buttons';
+import Table from '@/app/ui/portifolios/table';
+import { CreateServices } from '@/app/ui/portifolios/buttons';
 
 import { Suspense } from 'react';
 import { InvoicesTableSkeleton } from '@/app/ui/skeletons';
@@ -21,11 +21,11 @@ export default async function Page(props: {
   return (
     <div className="w-full">
       <div className="flex w-full items-center justify-between">
-        <h1 className="text-2xl font-semibold text-white">Atendimentos</h1>
+        <h1 className="text-2xl">Serviços</h1>
       </div>
       <div className="mt-4 flex items-center justify-between gap-2 md:mt-8">
         <Search placeholder="Buscar serviços prestados..." />
-        <CreateService />
+        <CreateServices />
       </div>
       {<Suspense key={query + currentPage} fallback={<InvoicesTableSkeleton />}>
         <Table query={query} currentPage={currentPage} />
