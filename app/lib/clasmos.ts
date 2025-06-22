@@ -130,7 +130,7 @@ export async function createService(prevState: State, formData: FormData) {
     );
 
     if (response.status === 201) {
-      redirect("/dashboard/services");
+      redirect("/dashboard/portifolios");
     } else {
       return {
         message: response.data.message || "Erro ao criar o serviço.",
