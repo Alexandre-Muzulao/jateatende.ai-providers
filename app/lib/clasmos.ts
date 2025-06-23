@@ -141,3 +141,62 @@ export async function createService(prevState: State, formData: FormData) {
     };
   }
 }
+
+// Lista todos os atendimentos
+export async function listServices() {
+  try {
+    const axiosInstance = await httpClient();
+    const response = await axiosInstance.get("/service");
+    console.log("Services fetched:", response.data);
+    
+    return response.data;
+  } catch (error: any) {
+    console.error("Error listing services:", error);
+    throw new Error(
+      error.response?.data?.message || "Erro ao listar os atendimentos."
+    );
+  }
+}
+
+// Busca detalhes de um atendimento pelo ID
+export async function getServiceById(id: string) {
+  try {
+    const axiosInstance = await httpClient();
+    const response = await axiosInstance.get(`/service/${id}`);
+    return response.data;
+  } catch (error: any) {
+    console.error("Error fetching service by ID:", error);
+    throw new Error(
+      error.response?.data?.message || "Erro ao buscar detalhes do atendimento."
+    );
+  }
+}
+
+// Busca atendimentos com filtro via POST
+export async function findServices(query: Record<string, any>) {
+  try {
+    const axiosInstance = await httpClient();
+    const response = await axiosInstance.post("/service/find", query);
+    return response.data;
+  } catch (error: any) {
+    console.error("Error finding services:", error);
+    throw new Error(
+      error.response?.data?.message || "Erro ao buscar atendimentos."
+    );
+  }
+}
+
+// Deleta um atendimento pelo ID
+export async function deleteService(id: string) {
+  try {
+    const axiosInstance = await httpClient();
+    const response = await axiosInstance.delete(`/service/${id}`);
+    return response.data;
+  } catch (error: any) {
+    console.error("Error deleting service:", error);
+    throw new Error(
+      error.response?.data?.message || "Erro ao deletar o atendimento."
+    );
+  }
+}
+

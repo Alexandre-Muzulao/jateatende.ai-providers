@@ -1,6 +1,6 @@
 import { PencilIcon, PlusIcon, TrashIcon } from '@heroicons/react/24/outline';
 import Link from 'next/link';
-import { deleteInvoice } from '@/app/lib/actions';
+import { deleteService } from '@/app/lib/clasmos';
 
 export function CreateService() {
   return (
@@ -14,10 +14,11 @@ export function CreateService() {
   );
 }
 
-export function UpdateInvoice({ id }: { id: string }) {
+export function UpdateService({ id }: { id: string }) {
+  console.log('UpdateService rendered with id:', id);
   return (
     <Link
-    href={`/dashboard/invoices/${id}/edit`}
+    href={`/dashboard/services/${id}/edit`}
       className="rounded-md border p-2 hover:bg-gray-100"
     >
       <PencilIcon className="w-5" />
@@ -25,12 +26,12 @@ export function UpdateInvoice({ id }: { id: string }) {
   );
 }
 
-export function DeleteInvoice({ id }: { id: string }) {
-  const deleteInvoiceWithId = deleteInvoice.bind(null, id);
+export function DeleteService({ id }: { id: string }) {
+  const deleteInvoiceWithId = deleteService.bind(null, id);
   return (
     <form action={deleteInvoiceWithId}>
       <button type="submit" className="rounded-md border p-2 hover:bg-gray-100">
-        <span className="sr-only">Delete</span>
+        <span className="sr-only">Deletar</span>
         <TrashIcon className="w-5" />
       </button>
     </form>
