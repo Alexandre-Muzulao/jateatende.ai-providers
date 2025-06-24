@@ -1,178 +1,344 @@
 'use client';
 
-import { CustomerField } from '@/app/lib/definitions';
 import Link from 'next/link';
-import {
-  CheckIcon,
-  ClockIcon,
-  CurrencyDollarIcon,
-  UserCircleIcon,
-} from '@heroicons/react/24/outline';
 import { Button } from '@/app/ui/button';
-import { createInvoice, State } from '@/app/lib/actions';
-import { useActionState } from 'react';
 import { useState } from 'react';
-import { InformationCircleIcon } from '@heroicons/react/24/outline';
 
-interface Detail {
-  title: string;
-  detail: string;
+type ServiceType = 'CLEANING' | 'PLUMBING' | 'ELECTRICAL' | 'CARPENTRY';
+
+interface Location {
+  latitude: number;
+  longitude: number;
 }
 
-function DynamicDetailList({
-  details,
-  onAdd,
-  onChange,
-  onRemove,
-  titlePlaceholder,
-  detailPlaceholder,
-  tooltip,
-}: {
-  details: Detail[];
-  onAdd: () => void;
-  onChange: (index: number, field: keyof Detail, value: string) => void;
-  onRemove: (index: number) => void;
-  titlePlaceholder: string;
-  detailPlaceholder: string;
-  tooltip: string;
-}) {
+interface CustomFields {
+  anoConstrucao?: number;
+  quantidadeTomadas?: number;
+  [key: string]: any;
+}
+
+interface FormState {
+  clientId: string;
+  providerId: string;
+  serviceType: ServiceType;
+  description: string;
+  scheduledTime: string;
+  location: Location;
+  price: number;
+  additionalInfo: string;
+  attachments: File[];
+  tags: string;
+  customFields: CustomFields;
+}
+
+const initialState: FormState = {
+  clientId: '',
+  providerId: '',
+  serviceType: 'ELECTRICAL',
+  description: '',
+  scheduledTime: '',
+  location: { latitude: 0, longitude: 0 },
+  price: 0,
+  additionalInfo: '',
+  attachments: [],
+  tags: '',
+  customFields: {
+    anoConstrucao: undefined,
+    quantidadeTomadas: undefined,
+  },
+};
+
+export default function Form() {
+  const [form, setForm] = useState<FormState>(initialState);
+  const [submitting, setSubmitting] = useState(false);
+
+  function handleChange(
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) {
+    const { name, value, type } = e.target;
+    if (name === 'latitude' || name === 'longitude') {
+      setForm((prev) => ({
+        ...prev,
+        location: {
+          ...prev.location,
+          [name]: parseFloat(value),
+        },
+      }));
+    } else if (name === 'price') {
+      setForm((prev) => ({ ...prev, price: parseFloat(value) }));
+    } else if (name === 'anoConstrucao' || name === 'quantidadeTomadas') {
+      setForm((prev) => ({
+        ...prev,
+        customFields: {
+          ...prev.customFields,
+          [name]: value ? Number(value) : undefined,
+        },
+      }));
+    } else if (name === 'attachments') {
+      const files = (e.target as HTMLInputElement).files;
+      setForm((prev) => ({
+        ...prev,
+        attachments: files ? Array.from(files) : [],
+      }));
+    } else {
+      setForm((prev) => ({ ...prev, [name]: type === 'number' ? Number(value) : value }));
+    }
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setSubmitting(true);
+
+    // Aqui você pode enviar os dados para sua API/backend
+    // Exemplo: await fetch('/api/appointments', { method: 'POST', body: JSON.stringify({ ... }) });
+
+    setTimeout(() => {
+      setSubmitting(false);
+      alert(
+        'Atendimento criado com sucesso!\n\n' +
+          JSON.stringify(
+            {
+              ...form,
+              tags: form.tags.split(',').map((t) => t.trim()).filter(Boolean),
+            },
+            null,
+            2
+          )
+      );
+      setForm(initialState);
+    }, 800);
+  }
+
   return (
-    <div className="mb-6">
-      <div className="flex items-center gap-2">
-        <label className="block text-sm font-medium">{tooltip}</label>
-        <InformationCircleIcon className="h-5 w-5 text-gray-500" title={tooltip} />
+    <form onSubmit={handleSubmit} className="rounded-md bg-gray-50 p-4 md:p-6">
+      <h2 className="text-lg font-semibold mb-4">Novo Atendimento</h2>
+
+      {/* Cliente */}
+      <div className="mb-4">
+        <label htmlFor="clientId" className="block text-sm font-medium">
+          Cliente
+        </label>
+        <input
+          id="clientId"
+          name="clientId"
+          type="text"
+          placeholder="ID do cliente"
+          className="block w-full rounded-md border border-gray-200 py-2 px-3 text-sm"
+          value={form.clientId}
+          onChange={handleChange}
+          required
+        />
       </div>
-      {details.map((detail, index) => (
-        <div key={index} className="mb-4">
-          {/* Title Field */}
-          <div className="mb-2">
-            <input
-              type="text"
-              placeholder={titlePlaceholder}
-              value={detail.title}
-              onChange={(e) => onChange(index, 'title', e.target.value)}
-              className="block w-full rounded-md border border-gray-200 py-2 px-3 text-sm"
-              required
-            />
-          </div>
-          {/* Detail and Button in the Same Line */}
-          <div className="flex items-center gap-4">
-            <textarea
-              placeholder={detailPlaceholder}
-              value={detail.detail}
-              onChange={(e) => onChange(index, 'detail', e.target.value)}
-              className="flex-1 rounded-md border border-gray-200 py-2 px-3 text-sm"
-              rows={2}
-              maxLength={1028}
-              required
-            />
-            <Button type="button" onClick={() => onRemove(index)}>
-              Esquecer isso!
-            </Button>
-          </div>
-        </div>
-      ))}
-      <Button type="button" onClick={onAdd}>
-        Bora por mais um!
-      </Button>
-    </div>
-  );
-}
 
-export default function Form({ customers }: { customers: CustomerField[] }) {
-  const initialState: State = { message: null, errors: {} };
-  const [state, formAction] = useActionState(createInvoice, initialState);
-  const [serviceDetails, setServiceDetails] = useState<Detail[]>([{ title: '', detail: '' }]);
-  const [problemDetails, setProblemDetails] = useState<Detail[]>([{ title: '', detail: '' }]);
+      {/* Prestador */}
+      <div className="mb-4">
+        <label htmlFor="providerId" className="block text-sm font-medium">
+          Prestador
+        </label>
+        <input
+          id="providerId"
+          name="providerId"
+          type="text"
+          placeholder="ID do prestador"
+          className="block w-full rounded-md border border-gray-200 py-2 px-3 text-sm"
+          value={form.providerId}
+          onChange={handleChange}
+          required
+        />
+      </div>
 
-  const handleAddDetail = (setDetails: React.Dispatch<React.SetStateAction<Detail[]>>) => {
-    setDetails((prev) => [...prev, { title: '', detail: '' }]);
-  };
+      {/* Tipo de Serviço */}
+      <div className="mb-4">
+        <label htmlFor="serviceType" className="block text-sm font-medium">
+          Tipo de Serviço
+        </label>
+        <select
+          id="serviceType"
+          name="serviceType"
+          className="block w-full rounded-md border border-gray-200 py-2 px-3 text-sm"
+          value={form.serviceType}
+          onChange={handleChange}
+          required
+        >
+          <option value="CLEANING">Limpeza</option>
+          <option value="PLUMBING">Hidráulica</option>
+          <option value="ELECTRICAL">Elétrica</option>
+          <option value="CARPENTRY">Marcenaria</option>
+        </select>
+      </div>
 
-  const handleDetailChange = (
-    setDetails: React.Dispatch<React.SetStateAction<Detail[]>>,
-    index: number,
-    field: keyof Detail,
-    value: string
-  ) => {
-    setDetails((prev) => {
-      const updatedDetails = [...prev];
-      updatedDetails[index][field] = value;
-      return updatedDetails;
-    });
-  };
+      {/* Descrição */}
+      <div className="mb-4">
+        <label htmlFor="description" className="block text-sm font-medium">
+          Descrição do Atendimento
+        </label>
+        <textarea
+          id="description"
+          name="description"
+          placeholder="Descreva o serviço a ser realizado"
+          className="block w-full rounded-md border border-gray-200 py-2 px-3 text-sm"
+          rows={3}
+          value={form.description}
+          onChange={handleChange}
+          required
+        />
+      </div>
 
-  const handleRemoveDetail = (
-    setDetails: React.Dispatch<React.SetStateAction<Detail[]>>,
-    index: number
-  ) => {
-    setDetails((prev) => prev.filter((_, i) => i !== index));
-  };
+      {/* Data/Hora Agendada */}
+      <div className="mb-4">
+        <label htmlFor="scheduledTime" className="block text-sm font-medium">
+          Data e Hora Agendada
+        </label>
+        <input
+          id="scheduledTime"
+          name="scheduledTime"
+          type="datetime-local"
+          className="block w-full rounded-md border border-gray-200 py-2 px-3 text-sm"
+          value={form.scheduledTime}
+          onChange={handleChange}
+          required
+        />
+      </div>
 
-  return (
-    <form action={formAction}>
-      <div className="rounded-md bg-gray-50 p-4 md:p-6">
-        {/* Service Name */}
-        <div className="mb-4">
-          <label htmlFor="specialty" className="block text-sm font-medium">
-            Qual nome você daria para a especialidade desse serviço?
+      {/* Localização */}
+      <div className="mb-4 flex gap-4">
+        <div className="flex-1">
+          <label htmlFor="latitude" className="block text-sm font-medium">
+            Latitude
           </label>
           <input
-            id="specialty"
-            name="specialty"
-            type="text"
-            placeholder="Descreva algo como... (Refrigeração, Ar-Condicionado, Mecânica, etc)"
+            id="latitude"
+            name="latitude"
+            type="number"
+            step="any"
             className="block w-full rounded-md border border-gray-200 py-2 px-3 text-sm"
+            value={form.location.latitude}
+            onChange={handleChange}
             required
           />
         </div>
-
-        {/* Service Description */}
-        <div className="mb-4">
-          <label htmlFor="serviceDescription" className="block text-sm font-medium">
-            Como você pesquisaria sobre esse serviço?
+        <div className="flex-1">
+          <label htmlFor="longitude" className="block text-sm font-medium">
+            Longitude
           </label>
-          <textarea
-            id="serviceDescription"
-            name="serviceDescription"
-            placeholder="Conta ai com mais detalhes... (no máximo 1028 characters)"
-            maxLength={1028}
+          <input
+            id="longitude"
+            name="longitude"
+            type="number"
+            step="any"
             className="block w-full rounded-md border border-gray-200 py-2 px-3 text-sm"
-            rows={3}
+            value={form.location.longitude}
+            onChange={handleChange}
             required
           />
         </div>
+      </div>
 
-        {/* Service Details */}
-        <DynamicDetailList
-          details={serviceDetails}
-          onAdd={() => handleAddDetail(setServiceDetails)}
-          onChange={(index, field, value) => handleDetailChange(setServiceDetails, index, field, value)}
-          onRemove={(index) => handleRemoveDetail(setServiceDetails, index)}
-          titlePlaceholder="Título (ex: Instalação de Ar-condicionado, etc)"
-          detailPlaceholder="Fala mais sobre... (no máximo 1028 characters)"
-          tooltip="Quais serviços você presta dessa especialidade?"
-        />
-
-        {/* Problem Details */}
-        <DynamicDetailList
-          details={problemDetails}
-          onAdd={() => handleAddDetail(setProblemDetails)}
-          onChange={(index, field, value) => handleDetailChange(setProblemDetails, index, field, value)}
-          onRemove={(index) => handleRemoveDetail(setProblemDetails, index)}
-          titlePlaceholder="Descreva algo como... (Ar-condicionado não gela, Vazamento de água, etc)"
-          detailPlaceholder="Fala mais sobre... (no máximo 1028 characters)"
-          tooltip="Quais problemas você acredita que resolve dessa especialidade?"
+      {/* Preço */}
+      <div className="mb-4">
+        <label htmlFor="price" className="block text-sm font-medium">
+          Preço (R$)
+        </label>
+        <input
+          id="price"
+          name="price"
+          type="number"
+          step="0.01"
+          className="block w-full rounded-md border border-gray-200 py-2 px-3 text-sm"
+          value={form.price}
+          onChange={handleChange}
+          required
         />
       </div>
+
+      {/* Informações Adicionais */}
+      <div className="mb-4">
+        <label htmlFor="additionalInfo" className="block text-sm font-medium">
+          Informações Adicionais
+        </label>
+        <textarea
+          id="additionalInfo"
+          name="additionalInfo"
+          placeholder="Ex: Verificar tomadas, disjuntores e fiação."
+          className="block w-full rounded-md border border-gray-200 py-2 px-3 text-sm"
+          rows={2}
+          value={form.additionalInfo}
+          onChange={handleChange}
+        />
+      </div>
+
+      {/* Anexos */}
+      <div className="mb-4">
+        <label htmlFor="attachments" className="block text-sm font-medium">
+          Anexos
+        </label>
+        <input
+          id="attachments"
+          name="attachments"
+          type="file"
+          multiple
+          className="block w-full text-sm"
+          onChange={handleChange}
+        />
+      </div>
+
+      {/* Tags */}
+      <div className="mb-4">
+        <label htmlFor="tags" className="block text-sm font-medium">
+          Tags (separadas por vírgula)
+        </label>
+        <input
+          id="tags"
+          name="tags"
+          type="text"
+          placeholder="revisão, elétrica, preventiva"
+          className="block w-full rounded-md border border-gray-200 py-2 px-3 text-sm"
+          value={form.tags}
+          onChange={handleChange}
+        />
+      </div>
+
+      {/* Campos customizados */}
+      <div className="mb-4 flex gap-4">
+        <div className="flex-1">
+          <label htmlFor="anoConstrucao" className="block text-sm font-medium">
+            Ano de Construção
+          </label>
+          <input
+            id="anoConstrucao"
+            name="anoConstrucao"
+            type="number"
+            className="block w-full rounded-md border border-gray-200 py-2 px-3 text-sm"
+            value={form.customFields.anoConstrucao ?? ''}
+            onChange={handleChange}
+          />
+        </div>
+        <div className="flex-1">
+          <label htmlFor="quantidadeTomadas" className="block text-sm font-medium">
+            Quantidade de Tomadas
+          </label>
+          <input
+            id="quantidadeTomadas"
+            name="quantidadeTomadas"
+            type="number"
+            className="block w-full rounded-md border border-gray-200 py-2 px-3 text-sm"
+            value={form.customFields.quantidadeTomadas ?? ''}
+            onChange={handleChange}
+          />
+        </div>
+      </div>
+
+      {/* Botões */}
       <div className="mt-6 flex justify-end gap-4">
         <Link
-          href="/dashboard/portifolios"
+          href="/dashboard/atendimentos"
           className="flex h-10 items-center rounded-lg bg-gray-100 px-4 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-200"
         >
           Cancelar
         </Link>
-        <Button type="submit">Criar Serviço!</Button>
+        <Button type="submit" disabled={submitting}>
+          {submitting ? 'Criando...' : 'Criar Atendimento'}
+        </Button>
       </div>
     </form>
   );

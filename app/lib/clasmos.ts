@@ -146,8 +146,7 @@ export async function createService(prevState: State, formData: FormData) {
 export async function listServices() {
   try {
     const axiosInstance = await httpClient();
-    const response = await axiosInstance.get("/service");
-    console.log("Services fetched:", response.data);
+    const response = await axiosInstance.get("/service");   
     
     return response.data;
   } catch (error: any) {
@@ -158,7 +157,7 @@ export async function listServices() {
   }
 }
 
-// Busca detalhes de um atendimento pelo ID
+// Busca detalhes de um at00endimento pelo ID
 export async function getServiceById(id: string) {
   try {
     const axiosInstance = await httpClient();

@@ -1,5 +1,5 @@
-import Form from '@/app/ui/portifolios/create-form';
-import Breadcrumbs from '@/app/ui/portifolios/breadcrumbs';
+import Form from '@/app/ui/services/create-form';
+import Breadcrumbs from '@/app/ui/services/breadcrumbs';
  
 export default async function Page() {
  
@@ -7,15 +7,15 @@ export default async function Page() {
     <main>
       <Breadcrumbs
         breadcrumbs={[
-          { label: 'Services', href: '/dashboard/portifolios' },
+          { label: 'Atencimentos', href: '/dashboard/services' },
           {
-            label: 'Problema que eu resolvo!',
-            href: '/dashboard/portifolios/create',
+            label: 'Novo Atendimento',
+            href: '/dashboard/services/create',
             active: true,
           },
         ]}
       />
-      <Form/>
+      <Form customers={[]}/>
     </main>
   );
 }
