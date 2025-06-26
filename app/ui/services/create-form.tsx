@@ -3,8 +3,19 @@
 import Link from 'next/link';
 import { Button } from '@/app/ui/button';
 import { useState } from 'react';
+import { MapModal } from '@/app/ui/modais/modal-maps';
 
-type ServiceType = 'CLEANING' | 'PLUMBING' | 'ELECTRICAL' | 'CARPENTRY';
+type ServiceType =
+  | 'CLEANING'
+  | 'PLUMBING'
+  | 'ELECTRICAL'
+  | 'CARPENTRY'
+  | 'PAINTING'
+  | 'GARDENING'
+  | 'MOVING'
+  | 'APPLIANCE_REPAIR'
+  | 'IT_SUPPORT'
+  | 'SECURITY';
 
 interface Location {
   latitude: number;
@@ -18,11 +29,12 @@ interface CustomFields {
 }
 
 interface FormState {
+  address: string;
   clientId: string;
   providerId: string;
   serviceType: ServiceType;
   description: string;
-  scheduledTime: string;
+  scheduledTime: string;  
   location: Location;
   price: number;
   additionalInfo: string;
@@ -37,6 +49,7 @@ const initialState: FormState = {
   serviceType: 'ELECTRICAL',
   description: '',
   scheduledTime: '',
+  address: '',
   location: { latitude: 0, longitude: 0 },
   price: 0,
   additionalInfo: '',
@@ -48,14 +61,37 @@ const initialState: FormState = {
   },
 };
 
+const serviceTypes = [
+  { value: 'CLEANING', label: 'Limpeza' },
+  { value: 'PLUMBING', label: 'Hidráulica' },
+  { value: 'ELECTRICAL', label: 'Elétrica' },
+  { value: 'CARPENTRY', label: 'Marcenaria' },
+  { value: 'PAINTING', label: 'Pintura' },
+  { value: 'GARDENING', label: 'Jardinagem' },
+  { value: 'MOVING', label: 'Mudança' },
+  { value: 'APPLIANCE_REPAIR', label: 'Conserto de Eletrodomésticos' },
+  { value: 'IT_SUPPORT', label: 'Suporte de Informática' },
+  { value: 'SECURITY', label: 'Segurança' },
+];
+
 export default function Form() {
   const [form, setForm] = useState<FormState>(initialState);
   const [submitting, setSubmitting] = useState(false);
+  const [showClientModal, setShowClientModal] = useState(false);
+
+  // Exemplo de clientes para o modal
+  const clientes = [
+    { id: 'user-909', name: 'João da Silva' },
+    { id: 'user-910', name: 'Maria Oliveira' },
+  ];
 
   function handleChange(
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) {
     const { name, value, type } = e.target;
+    if (name === 'address') { 
+      alert(`${e.target.value}`)
+    }
     if (name === 'latitude' || name === 'longitude') {
       setForm((prev) => ({
         ...prev,
@@ -83,6 +119,10 @@ export default function Form() {
     } else {
       setForm((prev) => ({ ...prev, [name]: type === 'number' ? Number(value) : value }));
     }
+  }
+
+  function handleSelectClient(cliente: { id: string; name: string }) {
+    setForm((prev) => ({ ...prev, clientId: cliente.id }));
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -115,9 +155,11 @@ export default function Form() {
 
       {/* Cliente */}
       <div className="mb-4">
-        <label htmlFor="clientId" className="block text-sm font-medium">
-          Cliente
-        </label>
+        <div className="flex items-center gap-2">
+          <label htmlFor="clientId" className="block text-sm font-medium">
+            Cliente
+          </label>
+        </div>
         <input
           id="clientId"
           name="clientId"
@@ -129,6 +171,13 @@ export default function Form() {
           required
         />
       </div>
+
+      {/* Modal de seleção de cliente */}
+      <MapModal open={showClientModal}
+        onClose={() => setShowClientModal(false)}
+        onSelectAddress={function (address: string, lat: number, lng: number): void {
+        throw new Error('Function not implemented.');
+      } }/>      
 
       {/* Prestador */}
       <div className="mb-4">
@@ -160,10 +209,11 @@ export default function Form() {
           onChange={handleChange}
           required
         >
-          <option value="CLEANING">Limpeza</option>
-          <option value="PLUMBING">Hidráulica</option>
-          <option value="ELECTRICAL">Elétrica</option>
-          <option value="CARPENTRY">Marcenaria</option>
+          {serviceTypes.map((type) => (
+            <option key={type.value} value={type.value}>
+              {type.label}
+            </option>
+          ))}
         </select>
       </div>
 
@@ -200,40 +250,31 @@ export default function Form() {
         />
       </div>
 
-      {/* Localização */}
-      <div className="mb-4 flex gap-4">
-        <div className="flex-1">
-          <label htmlFor="latitude" className="block text-sm font-medium">
-            Latitude
-          </label>
-          <input
-            id="latitude"
-            name="latitude"
-            type="number"
-            step="any"
-            className="block w-full rounded-md border border-gray-200 py-2 px-3 text-sm"
-            value={form.location.latitude}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        <div className="flex-1">
-          <label htmlFor="longitude" className="block text-sm font-medium">
-            Longitude
-          </label>
-          <input
-            id="longitude"
-            name="longitude"
-            type="number"
-            step="any"
-            className="block w-full rounded-md border border-gray-200 py-2 px-3 text-sm"
-            value={form.location.longitude}
-            onChange={handleChange}
-            required
-          />
-        </div>
+      {/* Endedereço */}
+      <div className="mb-4">
+        <label htmlFor="address" className="block text-sm font-medium">
+          Endedereço
+        </label>
+        <input
+          id="address"
+          name="address"
+          type="text"
+          step="0.01"
+          className="block w-full rounded-md border border-gray-200 py-2 px-3 text-sm"
+          value={form.address}
+          onChange={handleChange}
+          required
+        />
       </div>
 
+      <button
+        type="button"
+        className="ml-auto bg-blue-600 text-white px-3 py-1 rounded text-xs"
+        onClick={() => setShowClientModal(true)}
+      >
+        Buscar
+      </button>
+                
       {/* Preço */}
       <div className="mb-4">
         <label htmlFor="price" className="block text-sm font-medium">
@@ -343,3 +384,4 @@ export default function Form() {
     </form>
   );
 }
+
