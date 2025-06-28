@@ -1,34 +1,8 @@
-import NextAuth, { DefaultSession, User } from "next-auth";
+import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
-import { authConfig } from "./auth.config";
 import { z } from "zod";
 import axios from "axios";
 import { JWT } from "next-auth";
-
-declare module "next-auth" {
-  export interface User {
-    id?: string;
-    name?: string | null;
-    email?: string | null;
-    phone?: string | null;
-    role?: string | null;
-    token?: string | null; // Adiciona o token ao User
-  }
-
-  export interface Session {
-    user: User & DefaultSession["user"];
-    accessToken?: string;
-  }
-
-  export interface JWT {
-    id?: string;
-    name?: string;
-    email?: string;
-    phone?: string;
-    role?: string;
-    accessToken?: string;
-  }
-}
 
 const axiosInstance = axios.create({
   baseURL: `${process.env.HEGEMON_URL}`,
@@ -37,22 +11,10 @@ const axiosInstance = axios.create({
   },
 });
 
-async function getUser(token: string): Promise<User> {
-  try {
-    const { data } = await axiosInstance.get("/auth/user-data", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    return data;
-  } catch (error: any) {
-    throw new Error("Failed to fetch user.");
-  }
-}
-
 export const { auth, signIn, signOut } = NextAuth({
-  ...authConfig,
+  pages: {
+    signIn: "/",
+  },
   providers: [
     Credentials({
       async authorize(credentials) {
@@ -75,12 +37,6 @@ export const { auth, signIn, signOut } = NextAuth({
             email,
             password,
           });
-
-          if (!data || !data.user || !data.token) {
-            throw new Error(
-              "Invalid response from authUser: " + JSON.stringify(data)
-            );
-          }
 
           const { user, token } = data;
 
@@ -109,6 +65,7 @@ export const { auth, signIn, signOut } = NextAuth({
         ...user,
       };
     },
+
     async session({ session, token }) {
       if (token) {
         session.user = {
