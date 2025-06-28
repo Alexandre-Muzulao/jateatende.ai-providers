@@ -68,3 +68,22 @@ export const generatePagination = (currentPage: number, totalPages: number) => {
     totalPages,
   ];
 };
+
+/**
+ * Consulta um CEP na API ViaCEP.
+ * @param cep CEP no formato 00000-000 ou 00000000
+ * @returns Dados do endereço ou null se não encontrado
+ */
+export const fetchCepData = async (cep: string) => {
+  const cleanCep = cep.replace(/\D/g, '');
+  if (cleanCep.length !== 8) return null;
+  try {
+    const res = await fetch(`https://viacep.com.br/ws/${cleanCep}/json/`);
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (data.erro) return null;
+    return data; // { cep, logradouro, bairro, localidade, uf, ... }
+  } catch {
+    return null;
+  }
+}

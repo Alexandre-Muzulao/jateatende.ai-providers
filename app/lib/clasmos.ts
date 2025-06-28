@@ -146,8 +146,7 @@ export async function createService(prevState: State, formData: FormData) {
 export async function listServices() {
   try {
     const axiosInstance = await httpClient();
-    const response = await axiosInstance.get("/service");   
-    
+    const response = await axiosInstance.get("/service");
     return response.data;
   } catch (error: any) {
     console.error("Error listing services:", error);

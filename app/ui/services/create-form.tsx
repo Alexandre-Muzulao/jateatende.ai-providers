@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Button } from '@/app/ui/button';
 import { useState } from 'react';
 import { MapModal } from '@/app/ui/modais/modal-maps';
+import { MapIcon } from '@heroicons/react/24/outline';
 
 type ServiceType =
   | 'CLEANING'
@@ -173,11 +174,18 @@ export default function Form() {
       </div>
 
       {/* Modal de seleção de cliente */}
-      <MapModal open={showClientModal}
+      <MapModal
+        open={showClientModal}
         onClose={() => setShowClientModal(false)}
-        onSelectAddress={function (address: string, lat: number, lng: number): void {
-        throw new Error('Function not implemented.');
-      } }/>      
+        onSelectAddress={(address: string, lat: number, lng: number) => {
+          setForm((prev) => ({
+            ...prev,
+            address,
+            location: { latitude: lat, longitude: lng },
+          }));
+          setShowClientModal(false);
+        }}
+      />      
 
       {/* Prestador */}
       <div className="mb-4">
@@ -255,26 +263,29 @@ export default function Form() {
         <label htmlFor="address" className="block text-sm font-medium">
           Endedereço
         </label>
-        <input
-          id="address"
-          name="address"
-          type="text"
-          step="0.01"
-          className="block w-full rounded-md border border-gray-200 py-2 px-3 text-sm"
-          value={form.address}
-          onChange={handleChange}
-          required
-        />
+        <div className="relative">
+          <input
+            id="address"
+            name="address"
+            type="text"
+            step="0.01"
+            className="block w-full rounded-md border border-gray-200 py-2 px-3 pr-10 text-sm"
+            value={form.address}
+            onChange={handleChange}
+            required
+          />
+          <button
+            type="button"
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-blue-600 hover:text-blue-800"
+            onClick={() => setShowClientModal(true)}
+            tabIndex={-1}
+            aria-label="Selecionar endereço no mapa"
+          >
+            <MapIcon className="h-5 w-5" />
+          </button>
+        </div>
       </div>
 
-      <button
-        type="button"
-        className="ml-auto bg-blue-600 text-white px-3 py-1 rounded text-xs"
-        onClick={() => setShowClientModal(true)}
-      >
-        Buscar
-      </button>
-                
       {/* Preço */}
       <div className="mb-4">
         <label htmlFor="price" className="block text-sm font-medium">
