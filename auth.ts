@@ -3,6 +3,9 @@ import Credentials from "next-auth/providers/credentials";
 import { z } from "zod";
 import axios from "axios";
 import { JWT } from "next-auth";
+import { jwtDecrypt } from "jose";
+
+const { JWT_SECRET } = process.env;
 
 const axiosInstance = axios.create({
   baseURL: `${process.env.HEGEMON_URL}`,
@@ -10,6 +13,24 @@ const axiosInstance = axios.create({
     "Content-Type": "application/json",
   },
 });
+
+export async function getAccessTokenData(): Promise<AccessTokenData | null> {
+  const accessToken = (await auth())?.accessToken;
+  if (accessToken) {
+    const secretKey = new TextEncoder().encode(JWT_SECRET);
+    try {
+      const { payload }: { payload: AccessTokenData } = await jwtDecrypt(
+        accessToken,
+        secretKey
+      );
+
+      return payload;
+    } catch (error) {
+      return null;
+    }
+  }
+  return null;
+}
 
 export const { auth, signIn, signOut } = NextAuth({
   pages: {

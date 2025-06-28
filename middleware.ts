@@ -1,44 +1,21 @@
 import { NextURL } from "next/dist/server/web/next-url";
-import { NextRequest, NextResponse } from "next/server";
-import { jwtDecrypt, JWTPayload } from "jose";
-import { auth } from "./auth";
-
-const { JWT_SECRET } = process.env;
-const publicPaths = ["/", "/register"];
-
-interface AccessTokenData extends JWTPayload {
-  name: string;
-  email: string;
-  role: "CUSTOMER" | "PROVIDER" | "ADMIN";
-  account: {
-    updatedAt: Date;
-    status: "ACTIVE" | "INACTIVE" | "POST_REGISTRATION";
-  };
-}
-
-async function getAccessTokenData(): Promise<AccessTokenData | null> {
-  const accessToken = (await auth())?.accessToken;
-  if (accessToken) {
-    const secretKey = new TextEncoder().encode(JWT_SECRET);
-    try {
-      const { payload }: { payload: AccessTokenData } = await jwtDecrypt(
-        accessToken,
-        secretKey
-      );
-
-      return payload;
-    } catch (error) {
-      return null;
-    }
-  }
-  return null;
-}
+import { NextResponse } from "next/server";
+import { getAccessTokenData } from "./auth";
+import { UserAccountStatus } from "./@types/enums";
 
 export async function middleware({ nextUrl }: { nextUrl: NextURL }) {
+  const publicPaths = ["/", "/register"];
   const accessTokenData = await getAccessTokenData();
   const isLoggedIn = !!accessTokenData;
 
   if (isLoggedIn) {
+    const checkoutRequired =
+      nextUrl.pathname !== "/checkout" &&
+      accessTokenData.account.status === UserAccountStatus.POST_REGISTRATION;
+    if (checkoutRequired) {
+      return NextResponse.redirect(new URL("/checkout", nextUrl));
+    }
+
     if (publicPaths.includes(nextUrl.pathname)) {
       return NextResponse.redirect(new URL("/dashboard", nextUrl));
     }

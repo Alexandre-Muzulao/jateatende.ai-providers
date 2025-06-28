@@ -1,4 +1,18 @@
 import NextAuth, { DefaultSession, User } from "next-auth";
+import { JWTPayload } from "jose";
+import { UserAccountStatus, UserRole } from "./enums";
+
+declare global {
+  interface AccessTokenData extends JWTPayload {
+    name: string;
+    email: string;
+    role: UserRole;
+    account: {
+      updatedAt: Date;
+      status: UserAccountStatus;
+    };
+  }
+}
 
 declare module "next-auth" {
   export interface User {
@@ -6,7 +20,7 @@ declare module "next-auth" {
     name?: string | null;
     email?: string | null;
     phone?: string | null;
-    role?: string | null;
+    role?: UserRole | null;
     token?: string | null; // Adiciona o token ao User
   }
 
