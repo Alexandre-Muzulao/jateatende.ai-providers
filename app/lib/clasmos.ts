@@ -3,7 +3,6 @@
 import { z } from "zod";
 import { redirect } from "next/navigation";
 import axios from "axios";
-import { scheduler } from "timers/promises";
 import { auth } from "@/auth";
 
 async function httpClient() {

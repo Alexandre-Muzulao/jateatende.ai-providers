@@ -1,7 +1,8 @@
 import Image from "next/image";
 import { UserAccountStatus } from "@/@types/enums";
-import { getAccessTokenData } from "@/auth";
+import { getAccessTokenData, auth } from "@/auth";
 import { redirect } from "next/navigation";
+import { CheckoutForm } from "../ui/checkout/checkout-form";
 
 export default async function CheckoutPage() {
   const accessTokenData = await getAccessTokenData();
@@ -28,7 +29,9 @@ export default async function CheckoutPage() {
             recursos e benefícios do <strong>JaTeAtende</strong>.
           </p>
         </div>
-        <div className="w-full sm:w-1/3"></div>
+        <div className="w-full sm:w-1/3">
+          <CheckoutForm />
+        </div>
       </div>
     </main>
   );
