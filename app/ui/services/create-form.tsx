@@ -5,6 +5,10 @@ import { Button } from '@/app/ui/button';
 import { useState } from 'react';
 import { MapModal } from '@/app/ui/modais/modal-maps';
 import { MapIcon } from '@heroicons/react/24/outline';
+import { UserIcon } from '@heroicons/react/24/outline';
+import { ModalClient } from '@/app/ui/modais/modal-client';
+import { ModalClient as ModalProvider } from '@/app/ui/modais/modal-prestador';
+import { SelectServicesStatus } from '@/app/ui/selects/select-services-status';
 
 type ServiceType =
   | 'CLEANING'
@@ -32,7 +36,9 @@ interface CustomFields {
 interface FormState {
   address: string;
   clientId: string;
+  clientName: string;
   providerId: string;
+  providerName: string;
   serviceType: ServiceType;
   description: string;
   scheduledTime: string;  
@@ -42,11 +48,14 @@ interface FormState {
   attachments: File[];
   tags: string;
   customFields: CustomFields;
+  status?: string;
 }
 
 const initialState: FormState = {
   clientId: '',
+  clientName: '',
   providerId: '',
+  providerName: '',
   serviceType: 'ELECTRICAL',
   description: '',
   scheduledTime: '',
@@ -60,6 +69,7 @@ const initialState: FormState = {
     anoConstrucao: undefined,
     quantidadeTomadas: undefined,
   },
+  status: 'AGENDADO',
 };
 
 const serviceTypes = [
@@ -75,10 +85,25 @@ const serviceTypes = [
   { value: 'SECURITY', label: 'Segurança' },
 ];
 
+// Adicione este array para os status e suas cores
+const statusOptions = [
+  { value: 'AGENDADO', label: 'Agendado', color: 'bg-blue-500' },
+  { value: 'CANCELADO', label: 'Cancelado', color: 'bg-red-500' },
+  { value: 'EM_ANDAMENTO', label: 'Em andamento', color: 'bg-yellow-500' },
+  { value: 'NAO_FINALIZADO', label: 'Não finalizado', color: 'bg-orange-500' },
+  { value: 'ENCERRADO', label: 'Encerrado', color: 'bg-green-500' },
+  { value: 'AGUARDANDO_AVALIACAO', label: 'Aguardando avaliação', color: 'bg-purple-500' },
+  { value: 'AVALIADO', label: 'Avaliado', color: 'bg-teal-500' },
+];
+
 export default function Form() {
   const [form, setForm] = useState<FormState>(initialState);
   const [submitting, setSubmitting] = useState(false);
   const [showClientModal, setShowClientModal] = useState(false);
+  const [showClientSearchModal, setShowClientSearchModal] = useState(false);
+  const [showProviderSearchModal, setShowProviderSearchModal] = useState(false);
+  const [showMapModal, setShowMapModal] = useState(false);
+  const [priceInput, setPriceInput] = useState('');
 
   // Exemplo de clientes para o modal
   const clientes = [
@@ -102,7 +127,10 @@ export default function Form() {
         },
       }));
     } else if (name === 'price') {
-      setForm((prev) => ({ ...prev, price: parseFloat(value) }));
+      const formatted = formatBRL(value);
+      setPriceInput(formatted);
+      // Se quiser salvar o valor numérico no form:
+      setForm(prev => ({ ...prev, price: Number(value.replace(/\D/g, ' ')) }));
     } else if (name === 'anoConstrucao' || name === 'quantidadeTomadas') {
       setForm((prev) => ({
         ...prev,
@@ -124,6 +152,11 @@ export default function Form() {
 
   function handleSelectClient(cliente: { id: string; name: string }) {
     setForm((prev) => ({ ...prev, clientId: cliente.id }));
+  }
+
+  // Adicione o handler para o status
+  function handleStatusChange(value: string) {
+    setForm((prev) => ({ ...prev, status: value }));
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -150,59 +183,111 @@ export default function Form() {
     }, 800);
   }
 
+  function formatBRL(value: string) {
+    const cleaned = value.replace(/\D/g, '');
+    const number = Number(cleaned) / 100;
+    // Gera o valor e garante o espaço após o R$
+    return number
+      .toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+      .replace('R$', 'R$ ');
+  }
+
   return (
     <form onSubmit={handleSubmit} className="rounded-md bg-gray-50 p-4 md:p-6">
-      <h2 className="text-lg font-semibold mb-4">Novo Atendimento</h2>
+      {/* Título e Status Select */}
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-lg font-semibold">Novo Atendimento</h2>
+        <SelectServicesStatus
+          value={form.status || ''}
+          onChange={handleStatusChange}
+        />
+      </div>
 
       {/* Cliente */}
       <div className="mb-4">
         <div className="flex items-center gap-2">
-          <label htmlFor="clientId" className="block text-sm font-medium">
+          <label htmlFor="clientName" className="block text-sm font-medium">
             Cliente
           </label>
         </div>
-        <input
-          id="clientId"
-          name="clientId"
-          type="text"
-          placeholder="ID do cliente"
-          className="block w-full rounded-md border border-gray-200 py-2 px-3 text-sm"
-          value={form.clientId}
-          onChange={handleChange}
-          required
-        />
+        <div className="relative">
+          <input
+            id="clientName"
+            name="clientName"
+            type="text"
+            placeholder="Nome do cliente"
+            className="block w-full rounded-md border border-gray-200 py-2 px-3 pr-10 text-sm"
+            value={form.clientName}
+            onChange={handleChange}
+            required
+          />
+          <button
+            type="button"
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-blue-600 hover:text-blue-800"
+            onClick={() => setShowClientSearchModal(true)}
+            tabIndex={-1}
+            aria-label="Buscar cliente"
+          >
+            <UserIcon className="h-5 w-5" />
+          </button>
+        </div>
       </div>
 
-      {/* Modal de seleção de cliente */}
-      <MapModal
-        open={showClientModal}
-        onClose={() => setShowClientModal(false)}
-        onSelectAddress={(address: string, lat: number, lng: number) => {
+      {/* Modal de busca de cliente */}
+      <ModalClient
+        open={showClientSearchModal}
+        onClose={() => setShowClientSearchModal(false)}
+        onSelectClient={(cliente) => {
           setForm((prev) => ({
             ...prev,
-            address,
-            location: { latitude: lat, longitude: lng },
+            clientId: cliente.id,
+            clientName: cliente.name,
           }));
-          setShowClientModal(false);
+          setShowClientSearchModal(false);
         }}
-      />      
+      />
 
       {/* Prestador */}
       <div className="mb-4">
-        <label htmlFor="providerId" className="block text-sm font-medium">
+        <label htmlFor="providerName" className="block text-sm font-medium">
           Prestador
         </label>
-        <input
-          id="providerId"
-          name="providerId"
-          type="text"
-          placeholder="ID do prestador"
-          className="block w-full rounded-md border border-gray-200 py-2 px-3 text-sm"
-          value={form.providerId}
-          onChange={handleChange}
-          required
-        />
+        <div className="relative">
+          <input
+            id="providerName"
+            name="providerName"
+            type="text"
+            placeholder="Nome do prestador"
+            className="block w-full rounded-md border border-gray-200 py-2 px-3 pr-10 text-sm"
+            value={form.providerName}
+            onChange={handleChange}
+            required
+          />
+          <button
+            type="button"
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-blue-600 hover:text-blue-800"
+            onClick={() => setShowProviderSearchModal(true)}
+            tabIndex={-1}
+            aria-label="Buscar prestador"
+          >
+            <UserIcon className="h-5 w-5" />
+          </button>
+        </div>
       </div>
+
+      {/* Modal de busca de prestador */}
+      <ModalProvider
+        open={showProviderSearchModal}
+        onClose={() => setShowProviderSearchModal(false)}
+        onSelectClient={(prestador) => {
+          setForm((prev) => ({
+            ...prev,
+            providerId: prestador.id,
+            providerName: prestador.name,
+          }));
+          setShowProviderSearchModal(false);
+        }}
+      />
 
       {/* Tipo de Serviço */}
       <div className="mb-4">
@@ -258,10 +343,10 @@ export default function Form() {
         />
       </div>
 
-      {/* Endedereço */}
+      {/* Endereço */}
       <div className="mb-4">
         <label htmlFor="address" className="block text-sm font-medium">
-          Endedereço
+          Endereço
         </label>
         <div className="relative">
           <input
@@ -277,7 +362,7 @@ export default function Form() {
           <button
             type="button"
             className="absolute right-2 top-1/2 -translate-y-1/2 text-blue-600 hover:text-blue-800"
-            onClick={() => setShowClientModal(true)}
+            onClick={() => setShowMapModal(true)}
             tabIndex={-1}
             aria-label="Selecionar endereço no mapa"
           >
@@ -285,6 +370,20 @@ export default function Form() {
           </button>
         </div>
       </div>
+
+      {/* Modal do mapa para buscar endereço */}
+      <MapModal
+        open={showMapModal}
+        onClose={() => setShowMapModal(false)}
+        onSelectAddress={(address: string, lat: number, lng: number) => {
+          setForm((prev) => ({
+            ...prev,
+            address,
+            location: { latitude: lat, longitude: lng },
+          }));
+          setShowMapModal(false);
+        }}
+      />
 
       {/* Preço */}
       <div className="mb-4">
@@ -294,11 +393,15 @@ export default function Form() {
         <input
           id="price"
           name="price"
-          type="number"
-          step="0.01"
+          type="text"
+          placeholder="R$ 0,00"
           className="block w-full rounded-md border border-gray-200 py-2 px-3 text-sm"
-          value={form.price}
-          onChange={handleChange}
+          value={priceInput}
+          onChange={e => {
+            const formatted = formatBRL(e.target.value);
+            setPriceInput(formatted);
+            setForm(prev => ({ ...prev, price: Number(e.target.value.replace(/\D/g, '')) }));
+          }}
           required
         />
       </div>
@@ -348,36 +451,6 @@ export default function Form() {
           value={form.tags}
           onChange={handleChange}
         />
-      </div>
-
-      {/* Campos customizados */}
-      <div className="mb-4 flex gap-4">
-        <div className="flex-1">
-          <label htmlFor="anoConstrucao" className="block text-sm font-medium">
-            Ano de Construção
-          </label>
-          <input
-            id="anoConstrucao"
-            name="anoConstrucao"
-            type="number"
-            className="block w-full rounded-md border border-gray-200 py-2 px-3 text-sm"
-            value={form.customFields.anoConstrucao ?? ''}
-            onChange={handleChange}
-          />
-        </div>
-        <div className="flex-1">
-          <label htmlFor="quantidadeTomadas" className="block text-sm font-medium">
-            Quantidade de Tomadas
-          </label>
-          <input
-            id="quantidadeTomadas"
-            name="quantidadeTomadas"
-            type="number"
-            className="block w-full rounded-md border border-gray-200 py-2 px-3 text-sm"
-            value={form.customFields.quantidadeTomadas ?? ''}
-            onChange={handleChange}
-          />
-        </div>
       </div>
 
       {/* Botões */}

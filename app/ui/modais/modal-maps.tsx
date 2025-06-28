@@ -107,9 +107,9 @@ export function MapModal({ open, onClose, onSelectAddress }: MapModalProps) {
       </div>
 
       {/* Espaço para o mapa */}
-      <div className="w-full h-56 bg-gray-100 rounded mb-4 flex items-center justify-center">
+      {/* <div className="w-full h-56 bg-gray-100 rounded mb-4 flex items-center justify-center">
         <span className="text-gray-400">Mapa de referência</span>
-      </div>
+      </div> */}
 
       {/* Endereço selecionado */}
       <label className="block text-sm font-medium mb-4">
