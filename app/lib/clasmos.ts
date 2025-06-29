@@ -18,7 +18,7 @@ async function httpClient() {
 }
 
 // Define o esquema de validação para os campos do formulário
-const CreateServiceSchema = z.object({
+const CreatePortifolioSchema = z.object({
   location: z
     .string()
     .min(1, { message: "O campo localização é obrigatório." }),
@@ -80,12 +80,12 @@ const CreateServiceSchema = z.object({
     .min(1, { message: "Adicione pelo menos uma especialidade." }),
 });
 
-export type State = z.infer<typeof CreateServiceSchema> & {
+export type State = z.infer<typeof CreatePortifolioSchema> & {
   errors: Record<string, string[]>;
   message: string;
 };
 
-export async function createService(prevState: State, formData: FormData) {
+export async function createPortifolio(prevState: State, formData: FormData) {
   const data = {
     location: formData.get("location") as string,
     schedule: JSON.parse(formData.get("schedule") as string), // Adiciona o campo schedule
@@ -93,7 +93,7 @@ export async function createService(prevState: State, formData: FormData) {
     specialties: JSON.parse(formData.get("specialties") as string), // Adiciona o campo specialties
   };
 
-  const validatedFields = CreateServiceSchema.safeParse(data);
+  const validatedFields = CreatePortifolioSchema.safeParse(data);
 
   if (!validatedFields.success) {
     return {
@@ -174,7 +174,7 @@ export async function getServiceById(id: string) {
 export async function findServices(query: Record<string, any>) {
   try {
     const axiosInstance = await httpClient();
-    const response = await axiosInstance.post("/service/find", query);
+    const response = await axiosInstance.post("/service/find", query);    
     return response.data;
   } catch (error: any) {
     console.error("Error finding services:", error);
@@ -198,3 +198,54 @@ export async function deleteService(id: string) {
   }
 }
 
+// Esquema de validação para o formulário de serviço
+const CreateServiceSchema = z.object({
+  clientName: z.string().min(1, "Cliente é obrigatório."),
+  providerName: z.string().min(1, "Prestador é obrigatório."),
+  serviceType: z.string().min(1, "Tipo de serviço é obrigatório."),
+  description: z.string().min(1, "Descrição é obrigatória."),
+  scheduledTime: z.string().min(1, "Data/hora agendada é obrigatória."),
+  address: z.string().min(1, "Endereço é obrigatório."),
+  price: z.number().min(0, "Preço deve ser informado."),
+  additionalInfo: z.string().optional(),
+  tags: z.string().optional(),
+  customFields: z.record(z.any()).optional(),
+  status: z.string().min(1, "Status é obrigatório."),
+});
+
+export type ServiceForm = z.infer<typeof CreateServiceSchema>;
+
+export async function createService(form: ServiceForm) {
+  console.log("Creating service with form data:", form);
+  // Validação
+  const validated = CreateServiceSchema.safeParse(form);
+  if (!validated.success) {
+    return {
+      success: false,
+      errors: validated.error.flatten().fieldErrors,
+      message: "Erro de validação no formulário.",
+    };
+  }
+
+  try {
+    const axiosInstance = await httpClient();    
+    const response = await axiosInstance.post("/service", validated.data);
+    console.log("Response from createService:", response);
+
+    if (response.status === 201 || response.status === 200) {
+      return { success: true, data: response.data };
+    } else {
+      return {
+        success: false,
+        errors: {},
+        message: response.data?.message || "Erro ao criar o serviço.",
+      };
+    }
+  } catch (error: any) {
+    return {
+      success: false,
+      errors: {},
+      message: error.response?.data?.message || "Erro ao conectar com o servidor.",
+    };
+  }
+}

@@ -4,13 +4,13 @@ import { Select } from './select';
 
 // Opções de status com suas cores e descrições
 const statusOptions = [
-  { value: 'AGENDADO', label: 'Agendado', color: 'bg-blue-500' },
-  { value: 'CANCELADO', label: 'Cancelado', color: 'bg-red-500' },
-  { value: 'EM_ANDAMENTO', label: 'Em andamento', color: 'bg-yellow-500' },
-  { value: 'NAO_FINALIZADO', label: 'Não finalizado', color: 'bg-orange-500' },
-  { value: 'ENCERRADO', label: 'Encerrado', color: 'bg-green-500' },
-  { value: 'AGUARDANDO_AVALIACAO', label: 'Aguardando avaliação', color: 'bg-purple-500' },
-  { value: 'AVALIADO', label: 'Avaliado', color: 'bg-teal-500' },
+  { value: 'SCHEDULED', label: 'Agendado', color: 'bg-blue-500' },
+  { value: 'CANCELLED', label: 'Cancelado', color: 'bg-red-500' },
+  { value: 'IN_PROGRESS', label: 'Em andamento', color: 'bg-yellow-500' },
+  { value: 'NOT_FINISHED', label: 'Não finalizado', color: 'bg-orange-500' },
+  { value: 'FINISHED', label: 'Encerrado', color: 'bg-green-500' },
+  { value: 'WAITING_REVIEW', label: 'Aguardando avaliação', color: 'bg-purple-500' },
+  { value: 'REVIEWED', label: 'Avaliado', color: 'bg-teal-500' },
 ];
 
 interface SelectServicesStatusProps {
