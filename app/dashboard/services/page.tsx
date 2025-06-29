@@ -24,7 +24,7 @@ export default async function Page(props: {
         <h1 className="text-2xl font-semibold text-white">Atendimentos</h1>
       </div>
       <div className="mt-4 flex items-center justify-between gap-2 md:mt-8">
-        <Search placeholder="Buscar serviços prestados..." />
+        <Search placeholder="Buscar atendimento realizado..." />
         <CreateService />
       </div>
       {<Suspense key={query + currentPage} fallback={<InvoicesTableSkeleton />}>

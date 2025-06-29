@@ -3,7 +3,7 @@
 import { ServiceForm } from "@/app/lib/definitions";
 import { useState } from "react";
 import { Button } from "@/app/ui/button";
-import { createService, State } from "@/app/lib/clasmos";
+import { createPortifolio, State } from "@/app/lib/clasmos";
 import { useActionState } from "react";
 import Link from "next/link";
 import { InformationCircleIcon } from "@heroicons/react/24/outline";
@@ -147,7 +147,7 @@ export default function Form() {
       },
     ],
   };
-  const [state, formAction] = useActionState(createService, initialState);
+  const [state, formAction] = useActionState(createPortifolio, initialState);
   const [services, setServices] = useState<Service[]>([
     { service: "", detail: "" },
   ]);
@@ -256,7 +256,7 @@ export default function Form() {
 
     formData.set("specialties", JSON.stringify(specialties));
 
-    createService(state, formData);
+    createPortifolio(state, formData);
   };
 
   return (
