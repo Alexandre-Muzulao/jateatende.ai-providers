@@ -1,6 +1,5 @@
 'use client';
 
-
 import {
   AtSymbolIcon,
   KeyIcon,
@@ -8,6 +7,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { ArrowRightIcon } from '@heroicons/react/20/solid';
 import { Button } from './button';
+import PasswordField from './button';
 import { useActionState } from 'react';
 import { authenticate } from '@/app/lib/actions';
 import { useSearchParams } from 'next/navigation';
@@ -40,7 +40,7 @@ export default function LoginForm() {
                 id="email"
                 type="email"
                 name="email"
-                placeholder="Enter your email address"
+                placeholder="Entre com seu e-mail"
                 required
               />
               <AtSymbolIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500 peer-focus:text-gray-900" />
@@ -54,14 +54,13 @@ export default function LoginForm() {
               Senha
             </label>
             <div className="relative">
-              <input
-                className="peer block w-full rounded-md border border-gray-200 py-[9px] pl-10 text-sm outline-2 placeholder:text-gray-500"
+              <PasswordField
                 id="password"
-                type="password"
                 name="password"
-                placeholder="Enter password"
+                placeholder="Entre com sua senha"
                 required
                 minLength={6}
+                inputClassName="peer block w-full rounded-md border border-gray-200 py-[9px] pl-10 text-sm outline-2 placeholder:text-gray-500"
               />
               <KeyIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500 peer-focus:text-gray-900" />
             </div>
@@ -69,12 +68,9 @@ export default function LoginForm() {
         </div>
         <input type="hidden" name="redirectTo" value={callbackUrl} />
         <Button className="mt-4 w-full text-center bg-primary hover:bg-warning active:bg-warning" aria-disabled={isPending}>
-
           <b className='mx-auto'>Login</b>
-
           <ArrowRightIcon className="h-5 w-5 text-gray-50" />
         </Button>
-
         <div className="flex h-8 items-end space-x-1">
           {errorMessage && (
             <>
