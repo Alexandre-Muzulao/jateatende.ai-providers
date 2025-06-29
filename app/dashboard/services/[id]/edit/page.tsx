@@ -1,5 +1,5 @@
-import Form from '@/app/ui/invoices/edit-form';
-import Breadcrumbs from '@/app/ui/invoices/breadcrumbs';
+import Form from '@/app/ui/services/edit-form';
+import Breadcrumbs from '@/app/ui/services/breadcrumbs';
 
 import { getServiceById } from '@/app/lib/clasmos';
 import { fetchInvoiceById, fetchCustomers } from '@/app/lib/data';
@@ -26,7 +26,7 @@ export default async function Page(props: { params: { id: string } }) {
           },
         ]}
       />
-      <Form invoice={service} customers={customers} />
+      <Form service={service} customers={customers} />
     </main>
   );
 }

@@ -4,6 +4,8 @@ import ServiceStatus from '@/app/ui/services/status';
 import { formatDateToLocal, formatCurrency } from '@/app/lib/utils';
 import { fetchFilteredInvoices } from '@/app/lib/data';
 import { listServices } from '@/app/lib/clasmos';
+import Reviews from '../reviews/reviews';
+import DateTimeFormatted from '../components/DateTimeFormatted';
 
 export default async function ServicesTable({
   query,
@@ -61,7 +63,9 @@ export default async function ServicesTable({
               <tr>
                 <th className="px-4 py-5 font-medium">Cliente</th>
                 <th className="px-3 py-5 font-medium">Tipo de Serviço</th>
+                <th className="px-3 py-5 font-medium">Avaliação</th>
                 <th className="px-3 py-5 font-medium">Status</th>
+                <th className="px-3 py-5 font-medium">Data</th>
               </tr>
             </thead>
             <tbody className="bg-white">
@@ -71,13 +75,19 @@ export default async function ServicesTable({
                   className="w-full border-b py-3 text-sm last-of-type:border-none"
                 >
                   <td className="whitespace-nowrap py-3 pl-6 pr-3">
-                    {service.clientId}
+                    {service.clientName}
                   </td>
                   <td className="whitespace-nowrap px-3 py-3">
                     {service.serviceType}
                   </td>
                   <td className="whitespace-nowrap px-3 py-3">
+                    <Reviews rating={4.7} count={0} />
+                  </td>
+                  <td className="whitespace-nowrap px-3 py-3">
                     <ServiceStatus status={service.status} />
+                  </td>
+                  <td className="whitespace-nowrap px-3 py-3">
+                    <DateTimeFormatted value={service.scheduledTime} />
                   </td>
                   <td className="whitespace-nowrap py-3 pl-6 pr-3">
                     <div className="flex justify-end gap-3">
