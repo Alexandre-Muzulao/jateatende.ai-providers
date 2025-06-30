@@ -24,8 +24,7 @@ export function SelectServicesStatus({ value, onChange, className }: SelectServi
     <Select
       options={statusOptions}
       value={value}
-      onChange={e => onChange(e.target.value)}
-      colorByValue
+      onChange={onChange}
       className={className}
       aria-label="Selecione o status do serviço"
     />

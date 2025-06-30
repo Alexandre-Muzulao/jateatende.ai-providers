@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Modal } from './modal';
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
-import { fetchCepData } from '../../lib/utils';
+import { fetchCepData } from '../../../lib/utils';
 
 interface MapModalProps {
   open: boolean;
