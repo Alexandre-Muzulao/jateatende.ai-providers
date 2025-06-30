@@ -3,14 +3,14 @@
 import Link from 'next/link';
 import { Button } from '@/app/ui/button';
 import { useState } from 'react';
-import { MapModal } from '@/app/ui/modais/modal-maps';
+import { MapModal } from '@/app/ui/components/modais/modal-maps';
 import { MapIcon } from '@heroicons/react/24/outline';
 import { UserIcon } from '@heroicons/react/24/outline';
-import { ModalClient } from '@/app/ui/modais/modal-client';
-import { ModalClient as ModalProvider } from '@/app/ui/modais/modal-prestador';
-import { SelectServicesStatus } from '@/app/ui/selects/select-services-status';
+import { ModalClient } from '@/app/ui/components/modais/modal-client';
+import { ModalClient as ModalProvider } from '@/app/ui/components/modais/modal-prestador';
+import { SelectServicesStatus } from '@/app/ui/components/selects/select-services-status';
 import { createService } from '@/app/lib/clasmos';
-import { Alert } from '@/app/ui/alerts/alert';
+import { Alert } from '@/app/ui/components/alerts/alert';
 
 type ServiceType =
   | 'CLEANING'
@@ -469,7 +469,7 @@ export default function Form() {
         {/* Botões */}
         <div className="mt-6 flex justify-end gap-4">
           <Link
-            href="/dashboard/atendimentos"
+            href="/dashboard/services"
             className="flex h-10 items-center rounded-lg bg-gray-100 px-4 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-200"
           >
             Cancelar

@@ -4,12 +4,12 @@ import Link from 'next/link';
 import { Button } from '@/app/ui/button';
 import { updateInvoice, State } from '@/app/lib/actions';
 import { useActionState } from 'react';
-import { MapModal } from '@/app/ui/modais/modal-maps';
+import { MapModal } from '@/app/ui/components/modais/modal-maps';
 import { MapIcon, UserIcon } from '@heroicons/react/24/outline';
-import { ModalClient } from '@/app/ui/modais/modal-client';
-import { ModalClient as ModalProvider } from '@/app/ui/modais/modal-prestador';
-import { SelectServicesStatus } from '@/app/ui/selects/select-services-status';
-import { Alert } from '@/app/ui/alerts/alert';
+import { ModalClient } from '@/app/ui/components/modais/modal-client';
+import { ModalClient as ModalProvider } from '@/app/ui/components/modais/modal-prestador';
+import { SelectServicesStatus } from '@/app/ui/components/selects/select-services-status';
+import { Alert } from '@/app/ui/components/alerts/alert';
 import { useState } from 'react';
 import { updateService } from '@/app/lib/clasmos';
 
@@ -49,7 +49,7 @@ interface FormState {
   price: number;
   additionalInfo: string;
   attachments: File[];
-  tags: string;
+  tags: string | string[];
   customFields: CustomFields;
   status?: string;
 }
@@ -156,13 +156,11 @@ export default function EditServiceForm({
 
     const payload = {
       ...form,
-      tags: form.tags
-        ? form.tags.split(',').map((t) => t.trim()).filter(Boolean).join(',')
-        : '',
       price: typeof form.price === 'string'
         ? Number((form.price as string).replace(/\D/g, '')) / 100
         : form.price,
       status: form.status ?? 'AGENDADO',
+      tags: typeof form.tags === 'string' ? form.tags : (Array.isArray(form.tags) ? form.tags.join(', ') : ''),
     };
 
     // Chama updateService passando id e payload
@@ -459,7 +457,7 @@ export default function EditServiceForm({
         {/* Botões */}
         <div className="mt-6 flex justify-end gap-4">
           <Link
-            href="/dashboard/atendimentos"
+            href="/dashboard/services"
             className="flex h-10 items-center rounded-lg bg-gray-100 px-4 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-200"
           >
             Cancelar

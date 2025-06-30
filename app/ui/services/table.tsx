@@ -5,7 +5,7 @@ import { formatDateToLocal, formatCurrency } from '@/app/lib/utils';
 import { fetchFilteredInvoices } from '@/app/lib/data';
 import { listServices } from '@/app/lib/clasmos';
 import Reviews from '../reviews/reviews';
-import DateTimeFormatted from '../components/DateTimeFormatted';
+import DateTimeFormatted from '../components/date/DateTimeFormatted';
 
 export default async function ServicesTable({
   query,
@@ -81,7 +81,7 @@ export default async function ServicesTable({
                     {service.serviceType}
                   </td>
                   <td className="whitespace-nowrap px-3 py-3">
-                    <Reviews rating={4.7} count={0} />
+                    <Reviews rating={service.rating} count={service.count} />
                   </td>
                   <td className="whitespace-nowrap px-3 py-3">
                     <ServiceStatus status={service.status} />

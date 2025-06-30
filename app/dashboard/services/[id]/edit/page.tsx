@@ -5,8 +5,13 @@ import { getServiceById } from '@/app/lib/clasmos';
 import { fetchInvoiceById, fetchCustomers } from '@/app/lib/data';
 import { notFound } from 'next/navigation';
  
-export default async function Page(props: { params: { id: string } }) {
-  const id = props.params.id;
+interface PageProps {
+  params: { id: string };
+}
+
+export default async function Page({ params }: PageProps) {
+  // CORRETO: acesso assíncrono
+  const { id } = await params;
   const [service, customers] = await Promise.all([
     getServiceById(id),
     fetchCustomers(), 
